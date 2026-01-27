@@ -1,0 +1,131 @@
+import os, sqlite3, requests, pytz
+from flask import Flask, request, jsonify, render_template_string, session
+from datetime import datetime
+from flask_cors import CORS
+
+app = Flask(__name__)
+app.secret_key = "HARI_SOVEREIGN_2026"
+CORS(app)
+
+# --- DATABASE: डेटा कभी डिलीट नहीं होगा ---
+def init_db():
+    conn = sqlite3.connect('hai_data.db')
+    cursor = conn.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, password TEXT, phone TEXT)')
+    cursor.execute('CREATE TABLE IF NOT EXISTS chats (email TEXT, msg TEXT, reply TEXT, time TEXT)')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# --- MASTER IDENTITY TOKEN ---
+MASTER_TOKEN = "HARI-2026-REDEEMED-XYZ-99"
+
+# --- UI DESIGN (Public Software) ---
+UI_HTML = """
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>HAI - Digital Ecosystem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        .hai-gradient { background: linear-gradient(135deg, #FF3030, #007AFF, #34C759); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; }
+        .active { display: flex; }
+    </style>
+</head>
+<body>
+    <nav class="p-4 glass flex justify-between fixed top-0 w-full z-50">
+        <h1 class="text-2xl font-black hai-gradient">HAI</h1>
+        <div class="text-[10px] text-zinc-500">{% if session.user %} {{session.user}} (LIVE) {% else %} GUEST {% endif %}</div>
+    </nav>
+
+    <div id="chat-box" class="h-screen pt-24 pb-32 overflow-y-auto px-4">
+        <div id="msgs" class="max-w-2xl mx-auto space-y-4">
+            <div class="text-center py-10">
+                <h2 class="text-5xl font-black mb-2">नमस्ते मालिक, मैं <span class="hai-gradient">HAI</span> हूँ</h2>
+                {% if not session.user %}<button onclick="openM()" class="bg-white text-black px-8 py-3 rounded-full font-bold mt-5">Signup / Login</button>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="fixed bottom-0 w-full p-5 bg-black">
+        <div class="max-w-2xl mx-auto flex gap-2 glass p-2 rounded-2xl">
+            <input id="q" class="flex-1 bg-transparent p-2 outline-none" placeholder="पूछें...">
+            <button onclick="send()" class="bg-blue-600 px-6 py-2 rounded-xl font-bold">SEND</button>
+        </div>
+    </footer>
+
+    <div id="m" class="modal">
+        <div class="bg-zinc-900 p-8 rounded-3xl w-80 border border-white/10">
+            <h2 class="text-xl font-bold mb-4">Join <span class="hai-gradient">HAI</span></h2>
+            <input id="e" placeholder="Email" class="w-full bg-black border border-white/10 p-3 rounded-xl mb-3 outline-none">
+            <input id="o" placeholder="OTP (1234)" class="w-full bg-black border border-blue-500 p-3 rounded-xl mb-3 text-center outline-none">
+            <input id="p" type="password" placeholder="Password" class="w-full bg-black border border-white/10 p-3 rounded-xl mb-3 outline-none">
+            <button onclick="auth()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">Verify</button>
+        </div>
+    </div>
+
+    <script>
+        function openM() { document.getElementById('m').classList.add('active'); }
+        async function auth() {
+            const d = { e:document.getElementById('e').value, o:document.getElementById('o').value, p:document.getElementById('p').value };
+            const r = await fetch('/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
+            if(r.ok) location.reload(); else alert("Error!");
+        }
+        async function send() {
+            const q = document.getElementById('q');
+            const val = q.value; if(!val) return;
+            document.getElementById('msgs').innerHTML += `<div class="text-right"><span class="glass p-3 rounded-xl inline-block">${val}</span></div>`;
+            q.value = "";
+            const r = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({p:val}) });
+            if(r.status === 401) return openM();
+            const d = await r.json();
+            document.getElementById('msgs').innerHTML += `<div class="text-left"><span class="text-blue-500 block text-[10px]">HAI Official</span><span class="glass p-3 rounded-xl inline-block border-l-4 border-blue-600">${d.r}</span></div>`;
+        }
+    </script>
+</body>
+</html>
+"""
+
+# --- ROUTES ---
+
+@app.route('/')
+def home(): return render_template_string(UI_HTML)
+
+@app.route('/auth', methods=['POST'])
+def auth():
+    d = request.json
+    if d['o'] == "1234":
+        conn = sqlite3.connect('hai_data.db')
+        conn.execute('INSERT OR REPLACE INTO users VALUES (?, ?, ?)', (d['e'], d['p'], "0000000000"))
+        conn.commit()
+        session['user'] = d['e']
+        return jsonify({"s":"ok"})
+    return jsonify({"s":"err"}), 400
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    if 'user' not in session: return jsonify({"r":"Login"}), 401
+    p = request.json.get('p')
+    key = os.environ.get("GEMINI_API_KEY")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+    try:
+        res = requests.post(url, json={"contents":[{"parts":[{"text":p}]}]}).json()
+        reply = res['candidates'][0]['content']['parts'][0]['text']
+        return jsonify({"r": reply})
+    except: return jsonify({"r":"Busy"})
+
+# --- PRIVATE ADMIN PANEL ---
+@app.route('/admin-portal')
+def admin():
+    token = request.args.get('token')
+    if token != MASTER_TOKEN: return "UNAUTHORIZED", 403
+    return "<h1>HAI Admin Panel Active</h1><p>Owner: Harigovind Singh Chauhan</p>"
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
+
