@@ -1,0 +1,216 @@
+import os
+import sqlite3
+import requests
+from flask import Flask, request, jsonify, render_template_string, session
+from flask_cors import CORS
+from datetime import datetime
+
+app = Flask(__name__)
+app.secret_key = "HARI_SOVEREIGN_SECRET_2026"
+CORS(app)
+
+# --- DATABASE SETUP ---
+def init_db():
+    conn = sqlite3.connect('hai_database.db')
+    cursor = conn.cursor()
+    # Users Table
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users 
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE, phone TEXT, password TEXT, joined_at TEXT)''')
+    # Conversations Table
+    cursor.execute('''CREATE TABLE IF NOT EXISTS chat_history 
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, prompt TEXT, response TEXT, timestamp TEXT)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# --- MASTER CONFIG ---
+MASTER_IDENTITY_TOKEN = "HARI-2026-REDEEMED-XYZ-99"
+
+# --- HTML INTERFACE (Clean & Modern) ---
+UI_HTML = """
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI - Future Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        .hai-gradient { background: linear-gradient(135deg, #FF3030, #007AFF, #34C759); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        #chat-box { height: 80vh; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+    </style>
+</head>
+<body class="p-0 m-0">
+    <nav class="p-4 glass flex justify-between items-center fixed top-0 w-full z-50">
+        <h1 class="text-2xl font-black hai-gradient">HAI</h1>
+        <div id="status" class="text-xs font-bold text-zinc-500 uppercase tracking-tighter">
+            {% if session.get('user') %} {{ session['user'] }} (ACTIVE) {% else %} GUEST MODE {% endif %}
+        </div>
+    </nav>
+
+    <div id="chat-box" class="mt-20">
+        <div id="msgs" class="max-w-3xl mx-auto space-y-4">
+            <div class="text-center py-10">
+                <h2 class="text-5xl font-black mb-2">नमस्ते, मैं <span class="hai-gradient">HAI</span> हूँ</h2>
+                <p class="text-zinc-600 text-xs">Official Engine by Harigovind Singh Chauhan</p>
+                {% if not session.get('user') %}
+                <button onclick="openModal('auth-modal')" class="mt-6 bg-white text-black px-8 py-3 rounded-full font-black text-xs">शुरू करें</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="fixed bottom-0 w-full p-4 bg-black">
+        <div class="max-w-3xl mx-auto flex gap-2 glass p-2 rounded-2xl">
+            <input id="query" class="flex-1 bg-transparent p-3 outline-none text-sm" placeholder="यहाँ लिखें...">
+            <button onclick="send()" class="bg-blue-600 px-6 py-2 rounded-xl font-black text-xs">SEND</button>
+        </div>
+    </footer>
+
+    <div id="auth-modal" class="modal">
+        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-sm border border-white/10">
+            <h2 class="text-2xl font-black text-center mb-6">Join <span class="hai-gradient">HAI</span></h2>
+            <div id="step1">
+                <input id="email" type="email" placeholder="Email Address" class="w-full bg-black border border-white/10 p-4 rounded-2xl mb-4 outline-none">
+                <button onclick="getOTP()" class="w-full bg-white text-black py-4 rounded-2xl font-black">GET OTP</button>
+            </div>
+            <div id="step2" class="hidden">
+                <p class="text-blue-500 text-center text-xs mb-4">OTP: 1234 (Test)</p>
+                <input id="otp" type="text" placeholder="0000" class="w-full bg-black border border-blue-500 p-4 rounded-2xl mb-4 text-center text-2xl font-bold tracking-widest outline-none">
+                <input id="password" type="password" placeholder="Set Password" class="w-full bg-black border border-white/10 p-4 rounded-2xl mb-4 outline-none">
+                <button onclick="verify()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black">VERIFY & SIGNUP</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        async function getOTP() {
+            const email = document.getElementById('email').value;
+            if(!email.includes('@')) return alert("Sahi email dale");
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+
+        async function verify() {
+            const data = {
+                email: document.getElementById('email').value,
+                otp: document.getElementById('otp').value,
+                pass: document.getElementById('password').value
+            };
+            const res = await fetch('/signup', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if(res.ok) { window.location.reload(); } else { alert("OTP Galat hai!"); }
+        }
+
+        async function send() {
+            const input = document.getElementById('query');
+            const msg = input.value; if(!msg) return;
+            const msgs = document.getElementById('msgs');
+            msgs.innerHTML += `<div class="text-right"><span class="glass p-3 rounded-2xl inline-block text-sm">${msg}</span></div>`;
+            input.value = "";
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ prompt: msg })
+            });
+            const d = await res.json();
+            if(res.status === 401) { openModal('auth-modal'); return; }
+            msgs.innerHTML += `<div class="text-left"><span class="text-blue-500 text-[10px] block font-bold">HAI</span><span class="glass p-4 rounded-2xl inline-block text-sm border-l-4 border-blue-600">${d.reply}</span></div>`;
+            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+        }
+    </script>
+</body>
+</html>
+"""
+
+# --- BACKEND ROUTES ---
+
+@app.route('/')
+def home():
+    return render_template_string(UI_HTML)
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.json
+    if data['otp'] == "1234":
+        conn = sqlite3.connect('hai_database.db')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT INTO users (email, password, joined_at) VALUES (?, ?, ?)", 
+                           (data['email'], data['pass'], datetime.now().isoformat()))
+            conn.commit()
+            session['user'] = data['email']
+            return jsonify({"status": "success"})
+        except:
+            session['user'] = data['email'] # Already exists, log them in
+            return jsonify({"status": "success"})
+        finally:
+            conn.close()
+    return jsonify({"status": "fail"}), 400
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    if 'user' not in session:
+        return jsonify({"reply": "Login required"}), 401
+    
+    prompt = request.json.get('prompt')
+    key = os.environ.get("GEMINI_API_KEY")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+    
+    try:
+        r = requests.post(url, json={"contents":[{"parts":[{"text":prompt}]}]}).json()
+        reply = r['candidates'][0]['content']['parts'][0]['text']
+        
+        # Save to History
+        conn = sqlite3.connect('hai_database.db')
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO chat_history (email, prompt, response, timestamp) VALUES (?, ?, ?, ?)",
+                       (session['user'], prompt, reply, datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"reply": reply})
+    except:
+        return jsonify({"reply": "HAI Engine Busy."})
+
+# --- SEPARATE SOVEREIGN ADMIN PANEL ---
+@app.route('/admin-portal')
+def admin_portal():
+    token = request.args.get('token')
+    if token != MASTER_IDENTITY_TOKEN:
+        return "ACCESS DENIED: IDENTITY NOT VERIFIED", 403
+    
+    conn = sqlite3.connect('hai_database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users")
+    user_count = cursor.fetchone()[0]
+    cursor.execute("SELECT * FROM chat_history ORDER BY id DESC LIMIT 10")
+    logs = cursor.fetchall()
+    conn.close()
+
+    return f"""
+    <body style="background:#000; color:#fff; font-family:sans-serif; padding:40px;">
+        <h1 style="color:#007AFF;">HAI SOVEREIGN COMMAND CENTER</h1>
+        <p>Owner: <b>Harigovind Singh Chauhan</b></p>
+        <p>Total Registered Users: <b>{user_count}</b></p>
+        <hr style="border:1px solid #222;">
+        <h2>Recent Activity Logs</h2>
+        <div style="background:#111; padding:20px; border-radius:15px; font-size:12px;">
+            {''.join([f'<p style="border-bottom:1px solid #222; padding-bottom:5px;">User: {l[1]} | Q: {l[2][:50]}... | Time: {l[4]}</p>' for l in logs])}
+        </div>
+    </body>
+    """
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
