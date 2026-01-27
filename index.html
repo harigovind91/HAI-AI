@@ -6,10 +6,10 @@ import stripe
 app = Flask(__name__)
 app.secret_key = "HARI_SOVEREIGN_CLEAN_2026"
 
-# --- ⚙️ असली क्रेडेंशियल्स ---
+# --- ⚙️ असली क्रेडेंशियल्स (अदृश्य और सुरक्षित) ---
 stripe.api_key = os.environ.get("STRIPE_LIVE_KEY")
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY") # [cite: 2026-01-14] HAI Intelligence
-MASTER_KEY = "HARI-2026-REDEEMED-XYZ-99" # [cite: 2026-01-16] Master Security Key
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY") #
+MASTER_KEY = "HARI-2026-REDEEMED-XYZ-99" #
 
 # --- 🗄️ DATABASE ---
 def init_db():
@@ -33,8 +33,10 @@ UI_LAYOUT = """
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .hai-gradient { background: linear-gradient(135deg, #FF3030, #007AFF, #34C759); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; }
-        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.05); }
+        #box::-webkit-scrollbar { width: 4px; }
+        #box::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
     </style>
 </head>
 <body class="antialiased">
@@ -42,27 +44,28 @@ UI_LAYOUT = """
         <h1 class="text-2xl font-black hai-gradient">HAI</h1>
         <div>
             {% if session.user %}
-                <button class="text-[10px] bg-zinc-800 px-4 py-1 rounded-full text-zinc-400 uppercase tracking-tighter">{{ session.user }}</button>
+                <button class="text-[10px] bg-zinc-900 px-4 py-1 rounded-full text-zinc-500 uppercase">{{ session.user.split('@')[0] }}</button>
             {% else %}
-                <a href="/auth" class="text-xs font-bold text-blue-500">LOGIN</a>
+                <a href="/auth" class="text-xs font-bold text-zinc-400 hover:text-white transition">प्रवेश</a>
             {% endif %}
         </div>
     </nav>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-6">
-        <div id="chat-container" class="w-full max-w-3xl flex flex-col gap-4">
-            <div id="box" class="h-[60vh] overflow-y-auto p-6 space-y-6 font-medium text-sm">
-                <div class="text-zinc-500">नमस्ते, मैं HAI हूँ। मैं आपके लिए डिज़ाइन, टूल, सॉफ्टवेयर या आर्ट बना सकता हूँ। पूछिए...</div>
+    <main class="flex-1 flex flex-col items-center justify-end p-6 pb-12">
+        <div id="chat-container" class="w-full max-w-2xl flex flex-col gap-6">
+            <div id="box" class="overflow-y-auto max-h-[65vh] space-y-6 pr-2">
+                <div class="text-zinc-600 text-sm">प्रणाली सक्रिय है। मैं आपकी कैसे सहायता कर सकता हूँ?</div>
             </div>
             
-            <div id="paywall" class="hidden glass p-6 rounded-3xl border border-blue-500/50 text-center animate-bounce">
-                <p class="text-sm font-bold mb-3">Professional Task Detected: This service requires a PRO Subscription.</p>
-                <button onclick="window.location.href='/checkout'" class="bg-blue-600 text-white px-6 py-2 rounded-xl text-xs font-bold">UPGRADE NOW (₹1,580)</button>
+            <div id="paywall" class="hidden glass p-8 rounded-[35px] border border-blue-500/30 text-center scale-95 transition-all">
+                <h3 class="text-lg font-bold mb-2">व्यावसायिक सेवा का पता चला</h3>
+                <p class="text-zinc-500 text-xs mb-6">डिजाइन, सॉफ्टवेयर और कलात्मक कार्यों के लिए प्रो सदस्यता अनिवार्य है।</p>
+                <button onclick="window.location.href='/checkout'" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-2xl text-xs font-black transition">अनलॉक करें (₹1,580)</button>
             </div>
 
-            <div class="glass p-2 rounded-[30px] flex items-center pr-4">
-                <input id="q" class="flex-1 bg-transparent p-4 outline-none text-lg" placeholder="प्रोजेक्ट शुरू करें...">
-                <button onclick="ask()" class="bg-blue-600 p-4 rounded-2xl"><i data-lucide="arrow-up" class="w-5 h-5"></i></button>
+            <div class="glass p-2 rounded-[32px] flex items-center pr-3 border border-zinc-800 focus-within:border-zinc-700 transition">
+                <input id="q" class="flex-1 bg-transparent p-4 outline-none text-base placeholder-zinc-700" placeholder="कुछ भी पूछें या कार्य सौंपें...">
+                <button onclick="ask()" class="bg-zinc-100 text-black p-3 rounded-2xl hover:bg-white transition"><i data-lucide="arrow-up" class="w-5 h-5"></i></button>
             </div>
         </div>
     </main>
@@ -74,49 +77,51 @@ UI_LAYOUT = """
             const paywall = document.getElementById('paywall');
             if(!q.value) return;
             
-            box.innerHTML += `<div class="text-right text-zinc-400 font-normal ml-auto max-w-[80%]">${q.value}</div>`;
+            box.innerHTML += `<div class="text-right text-zinc-300 font-normal ml-auto max-w-[85%] bg-zinc-900/50 p-4 rounded-3xl rounded-tr-none">${q.value}</div>`;
             const val = q.value; q.value = "";
-            paywall.classList.add('hidden'); // Reset paywall on new ask
+            paywall.classList.add('hidden'); 
 
             const res = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({p: val}) });
             const data = await res.json();
             
             if(data.status === 'UPGRADE') {
                 paywall.classList.remove('hidden');
+                box.scrollTop = box.scrollHeight;
             } else {
-                box.innerHTML += `<div class="text-blue-500 max-w-[90%]">> HAI: ${data.r}</div>`;
+                box.innerHTML += `<div class="text-blue-500 max-w-[90%] font-medium leading-relaxed">> HAI: ${data.r}</div>`;
+                box.scrollTop = box.scrollHeight;
             }
-            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
 </html>
 """
 
-# --- 🚀 LOGIC: स्मार्ट एक्सेस कंट्रोल ---
+# --- 🚀 LOGIC: स्मार्ट एक्सेस कंट्रोल (On-Demand Paywall) ---
 @app.route('/chat', methods=['POST'])
 def chat():
     user_p = request.json.get('p').lower()
     plan = session.get('plan', 'FREE')
     
-    # [cite: 2026-01-27] व्यावसायिक कार्य ट्रिगर्स
+    # व्यावसायिक कार्य की पहचान
     pro_triggers = [
         'design', 'website', 'app', 'tool', 'software', 'art', 'video', 
-        'blueprint', 'cad', 'code', 'develop', 'architecture', 'legal'
+        'blueprint', 'cad', 'code', 'develop', 'architecture', 'legal',
+        'डिजाइन', 'वेबसाइट', 'सॉफ्टवेयर', 'नक्शा', 'कोड'
     ]
     
-    # अगर यूजर काम मांग रहा है और वो प्रो नहीं है
+    # मांग पर सब्सक्रिप्शन की मांग
     if any(word in user_p for word in pro_triggers) and plan == 'FREE':
         return jsonify({"status": "UPGRADE"})
 
-    # सामान्य बातचीत के लिए Gemini API
+    # सामान्य संवाद
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     try:
         r = requests.post(url, json={"contents":[{"parts":[{"text": user_p}]}]}).json()
         reply = r['candidates'][0]['content']['parts'][0]['text']
         return jsonify({"r": reply, "status": "OK"})
     except:
-        return jsonify({"r": "Service Node busy. Try again."})
+        return jsonify({"r": "प्रणाली व्यस्त है। पुनः प्रयास करें।", "status": "ERROR"})
 
 # --- 💳 STRIPE: असली पेमेंट ---
 @app.route('/checkout')
@@ -131,7 +136,7 @@ def checkout():
     )
     return redirect(checkout_session.url)
 
-@app.route('/payment-success')
+@app.route('/payment_success')
 def payment_success():
     email = session.get('user')
     conn = sqlite3.connect('hai_sovereign_pro.db')
@@ -148,7 +153,6 @@ def home():
 
 @app.route('/auth', methods=['GET', 'POST'])
 def auth():
-    # Login/Signup logic (Same as before but with better UI)
     if request.method == 'POST':
         email, pw = request.form.get('email'), request.form.get('pass')
         conn = sqlite3.connect('hai_sovereign_pro.db')
@@ -164,7 +168,7 @@ def auth():
             session['user'], session['plan'] = email, 'FREE'
             return redirect('/')
         conn.close()
-    return render_template_string("<form method='POST'>Signup/Login Form Here</form>")
+    return render_template_string("")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
