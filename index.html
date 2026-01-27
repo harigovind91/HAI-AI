@@ -1,131 +1,196 @@
-import os, sqlite3, requests, pytz
-from flask import Flask, request, jsonify, render_template_string, session
-from datetime import datetime
-from flask_cors import CORS
+import os, sqlite3, requests, json
+from flask import Flask, request, jsonify, render_template_string, session, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+import stripe
 
 app = Flask(__name__)
-app.secret_key = "HARI_SOVEREIGN_2026"
-CORS(app)
+app.secret_key = "HARI_SOVEREIGN_FINAL_AUTHENTIC_2026"
 
-# --- DATABASE: डेटा कभी डिलीट नहीं होगा ---
+# --- ⚙️ असली क्रेडेंशियल्स (Set these in your Environment) ---
+stripe.api_key = os.environ.get("STRIPE_LIVE_KEY")
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY") 
+MASTER_KEY = "HARI-2026-REDEEMED-XYZ-99" 
+
+# --- 🗄️ DATABASE: असली डेटा मैनेजमेंट ---
 def init_db():
-    conn = sqlite3.connect('hai_data.db')
-    cursor = conn.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, password TEXT, phone TEXT)')
-    cursor.execute('CREATE TABLE IF NOT EXISTS chats (email TEXT, msg TEXT, reply TEXT, time TEXT)')
+    conn = sqlite3.connect('hai_sovereign_pro.db')
+    c = conn.cursor()
+    # Users: Password hashed for safety. Plan is FREE by default.
+    c.execute('''CREATE TABLE IF NOT EXISTS users 
+                 (email TEXT PRIMARY KEY, password TEXT, plan TEXT DEFAULT 'FREE')''')
+    # Admin Table
+    c.execute('''CREATE TABLE IF NOT EXISTS admins 
+                 (username TEXT PRIMARY KEY, password TEXT, master_token TEXT)''')
+    
+    # [cite: 2026-01-16] Create Default Admin if not exists
+    try:
+        admin_pw = generate_password_hash("HARI_ADMIN_2026")
+        c.execute("INSERT OR IGNORE INTO admins VALUES ('admin_hari', ?, ?)", (admin_pw, MASTER_KEY))
+    except: pass
     conn.commit()
     conn.close()
 
 init_db()
 
-# --- MASTER IDENTITY TOKEN ---
-MASTER_TOKEN = "HARI-2026-REDEEMED-XYZ-99"
-
-# --- UI DESIGN (Public Software) ---
-UI_HTML = """
+# --- 🎨 UI: पब्लिक फेसिंग (Clean, Dark, Professional) ---
+UI_LAYOUT = """
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <title>HAI - Digital Ecosystem</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI | Universal AI Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
         .hai-gradient { background: linear-gradient(135deg, #FF3030, #007AFF, #34C759); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; }
-        .active { display: flex; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
-<body>
-    <nav class="p-4 glass flex justify-between fixed top-0 w-full z-50">
-        <h1 class="text-2xl font-black hai-gradient">HAI</h1>
-        <div class="text-[10px] text-zinc-500">{% if session.user %} {{session.user}} (LIVE) {% else %} GUEST {% endif %}</div>
+<body class="antialiased">
+    <nav class="p-5 glass sticky top-0 z-50 flex justify-between items-center px-10">
+        <h1 class="text-3xl font-black hai-gradient">HAI</h1>
+        <div>
+            {% if session.user %}
+                <span class="text-xs mr-4 text-zinc-500 uppercase">{{ session.user }} ({{ session.plan }})</span>
+                <a href="/logout" class="text-xs text-red-500 font-bold">LOGOUT</a>
+            {% else %}
+                <a href="/auth" class="bg-blue-600 px-6 py-2 rounded-full text-xs font-bold">LOGIN / SIGNUP</a>
+            {% endif %}
+        </div>
     </nav>
 
-    <div id="chat-box" class="h-screen pt-24 pb-32 overflow-y-auto px-4">
-        <div id="msgs" class="max-w-2xl mx-auto space-y-4">
-            <div class="text-center py-10">
-                <h2 class="text-5xl font-black mb-2">नमस्ते मालिक, मैं <span class="hai-gradient">HAI</span> हूँ</h2>
-                {% if not session.user %}<button onclick="openM()" class="bg-white text-black px-8 py-3 rounded-full font-bold mt-5">Signup / Login</button>{% endif %}
+    <main class="max-w-4xl mx-auto p-6 pt-10 text-center">
+        <h2 class="text-5xl font-black mb-10">Chat <span class="text-blue-500">Free</span>. Solve <span class="text-green-500">Pro</span>.</h2>
+
+        <div class="glass rounded-[40px] p-6 text-left shadow-2xl">
+            <div id="box" class="h-80 overflow-y-auto mb-6 p-4 bg-black/40 rounded-3xl font-mono text-sm space-y-4 border border-zinc-800">
+                <div class="text-zinc-600">> HAI System Live. Ready for Command.</div>
+            </div>
+            <div class="flex gap-4">
+                <input id="q" class="flex-1 bg-transparent border border-zinc-800 p-5 rounded-3xl outline-none focus:border-blue-500" placeholder="Ask anything (Free chat) or Professional tasks (Pro only)...">
+                <button onclick="ask()" class="bg-blue-600 p-5 rounded-3xl font-black"><i data-lucide="zap"></i></button>
             </div>
         </div>
-    </div>
 
-    <footer class="fixed bottom-0 w-full p-5 bg-black">
-        <div class="max-w-2xl mx-auto flex gap-2 glass p-2 rounded-2xl">
-            <input id="q" class="flex-1 bg-transparent p-2 outline-none" placeholder="पूछें...">
-            <button onclick="send()" class="bg-blue-600 px-6 py-2 rounded-xl font-bold">SEND</button>
+        {% if session.plan == 'FREE' or not session.user %}
+        <div class="mt-20 glass p-10 rounded-[50px] border border-blue-500/20">
+            <h3 class="text-2xl font-bold mb-4">Unlock Master Tools</h3>
+            <p class="text-zinc-500 mb-8 text-sm">CAD, Legal, Engineering, and Medical services are locked for Pro members.</p>
+            <button onclick="window.location.href='/checkout'" class="bg-white text-black px-10 py-4 rounded-2xl font-black uppercase tracking-tighter hover:bg-blue-600 hover:text-white transition">Upgrade for ₹1,580</button>
         </div>
-    </footer>
-
-    <div id="m" class="modal">
-        <div class="bg-zinc-900 p-8 rounded-3xl w-80 border border-white/10">
-            <h2 class="text-xl font-bold mb-4">Join <span class="hai-gradient">HAI</span></h2>
-            <input id="e" placeholder="Email" class="w-full bg-black border border-white/10 p-3 rounded-xl mb-3 outline-none">
-            <input id="o" placeholder="OTP (1234)" class="w-full bg-black border border-blue-500 p-3 rounded-xl mb-3 text-center outline-none">
-            <input id="p" type="password" placeholder="Password" class="w-full bg-black border border-white/10 p-3 rounded-xl mb-3 outline-none">
-            <button onclick="auth()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">Verify</button>
-        </div>
-    </div>
+        {% endif %}
+    </main>
 
     <script>
-        function openM() { document.getElementById('m').classList.add('active'); }
-        async function auth() {
-            const d = { e:document.getElementById('e').value, o:document.getElementById('o').value, p:document.getElementById('p').value };
-            const r = await fetch('/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
-            if(r.ok) location.reload(); else alert("Error!");
-        }
-        async function send() {
-            const q = document.getElementById('q');
-            const val = q.value; if(!val) return;
-            document.getElementById('msgs').innerHTML += `<div class="text-right"><span class="glass p-3 rounded-xl inline-block">${val}</span></div>`;
-            q.value = "";
-            const r = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({p:val}) });
-            if(r.status === 401) return openM();
-            const d = await r.json();
-            document.getElementById('msgs').innerHTML += `<div class="text-left"><span class="text-blue-500 block text-[10px]">HAI Official</span><span class="glass p-3 rounded-xl inline-block border-l-4 border-blue-600">${d.r}</span></div>`;
+        lucide.createIcons();
+        async function ask() {
+            const q = document.getElementById('q'); const box = document.getElementById('box');
+            if(!q.value) return;
+            box.innerHTML += `<div class="text-right text-zinc-400">${q.value}</div>`;
+            const res = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({p:q.value}) });
+            const data = await res.json();
+            
+            if(data.status === 'UPGRADE') {
+                box.innerHTML += `<div class="text-orange-500">> SYSTEM: This task requires PRO access. Please upgrade.</div>`;
+            } else {
+                box.innerHTML += `<div class="text-blue-500">> HAI: ${data.r}</div>`;
+            }
+            q.value = ""; box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
 </html>
 """
 
-# --- ROUTES ---
-
-@app.route('/')
-def home(): return render_template_string(UI_HTML)
-
-@app.route('/auth', methods=['POST'])
+# --- 🔑 AUTH: असली लॉगिन और साइनअप ---
+@app.route('/auth', methods=['GET', 'POST'])
 def auth():
-    d = request.json
-    if d['o'] == "1234":
-        conn = sqlite3.connect('hai_data.db')
-        conn.execute('INSERT OR REPLACE INTO users VALUES (?, ?, ?)', (d['e'], d['p'], "0000000000"))
-        conn.commit()
-        session['user'] = d['e']
-        return jsonify({"s":"ok"})
-    return jsonify({"s":"err"}), 400
+    if request.method == 'POST':
+        email = request.form.get('email')
+        pw = request.form.get('pass')
+        conn = sqlite3.connect('hai_sovereign_pro.db')
+        c = conn.cursor()
+        c.execute("SELECT password, plan FROM users WHERE email=?", (email,))
+        user = c.fetchone()
+        
+        if user and check_password_hash(user[0], pw):
+            session['user'] = email
+            session['plan'] = user[1]
+            return redirect('/')
+        elif not user:
+            # ऑटो-साइनअप अगर यूजर नहीं है
+            hash_pw = generate_password_hash(pw)
+            c.execute("INSERT INTO users (email, password) VALUES (?, ?)", (email, hash_pw))
+            conn.commit()
+            session['user'] = email
+            session['plan'] = 'FREE'
+            return redirect('/')
+        return "Invalid Credentials"
+    
+    return render_template_string("""
+        <body style="background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif;">
+            <form method="POST" style="background:#111; padding:40px; border-radius:30px; border:1px solid #222;">
+                <h2 style="margin-bottom:20px;">HAI LOGIN / SIGNUP</h2>
+                <input name="email" type="email" placeholder="Email" required style="display:block; width:100%; margin-bottom:15px; padding:15px; border-radius:10px; background:#000; border:1px solid #333; color:#fff;"><br>
+                <input name="pass" type="password" placeholder="Password" required style="display:block; width:100%; margin-bottom:15px; padding:15px; border-radius:10px; background:#000; border:1px solid #333; color:#fff;"><br>
+                <button type="submit" style="width:100%; padding:15px; border-radius:10px; background:#007AFF; color:#fff; border:none; font-weight:bold;">ENTER SYSTEM</button>
+            </form>
+        </body>
+    """)
 
+# --- 💳 STRIPE: असली पेमेंट चेकआउट ---
+@app.route('/checkout')
+def checkout():
+    if not session.get('user'): return redirect('/auth')
+    checkout_session = stripe.checkout.Session.create(
+        payment_method_types=['card', 'upi'],
+        line_items=[{'price_data': {'currency': 'inr', 'product_data': {'name': 'HAI GLOBAL PRO'}, 'unit_amount': 158000}, 'quantity': 1}],
+        mode='payment',
+        success_url=url_for('payment_success', _external=True),
+        cancel_url=url_for('home', _external=True)
+    )
+    return redirect(checkout_session.url)
+
+@app.route('/payment-success')
+def payment_success():
+    email = session.get('user')
+    conn = sqlite3.connect('hai_sovereign_pro.db')
+    c = conn.cursor()
+    c.execute("UPDATE users SET plan='PRO' WHERE email=?", (email,))
+    conn.commit()
+    conn.close()
+    session['plan'] = 'PRO'
+    return redirect('/')
+
+# --- 🧠 AI ENGINE: फ्री बनाम प्रो फिल्टर ---
 @app.route('/chat', methods=['POST'])
 def chat():
-    if 'user' not in session: return jsonify({"r":"Login"}), 401
-    p = request.json.get('p')
-    key = os.environ.get("GEMINI_API_KEY")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
-    try:
-        res = requests.post(url, json={"contents":[{"parts":[{"text":p}]}]}).json()
-        reply = res['candidates'][0]['content']['parts'][0]['text']
-        return jsonify({"r": reply})
-    except: return jsonify({"r":"Busy"})
+    user_p = request.json.get('p').lower()
+    plan = session.get('plan', 'FREE')
+    
+    # [cite: 2026-01-27] व्यावसायिक कार्य फिल्टर
+    pro_triggers = ['cad', 'blueprint', 'legal', 'law', 'medical', 'diagnosis', 'engineering', 'architecture']
+    if any(word in user_p for word in pro_triggers) and plan == 'FREE':
+        return jsonify({"status": "UPGRADE"})
 
-# --- PRIVATE ADMIN PANEL ---
-@app.route('/admin-portal')
-def admin():
-    token = request.args.get('token')
-    if token != MASTER_TOKEN: return "UNAUTHORIZED", 403
-    return "<h1>HAI Admin Panel Active</h1><p>Owner: Harigovind Singh Chauhan</p>"
+    # AI Response
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+    try:
+        r = requests.post(url, json={"contents":[{"parts":[{"text": f"User Plan: {plan}. Task: {user_p}. Respond professionally as HAI."}]}]}).json()
+        return jsonify({"r": r['candidates'][0]['content']['parts'][0]['text'], "status": "OK"})
+    except:
+        return jsonify({"r": "System Node Busy."})
+
+@app.route('/')
+def home():
+    return render_template_string(UI_LAYOUT)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
-
+                
