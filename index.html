@@ -1,0 +1,115 @@
+import os
+from flask import Flask, render_template_string, request, session, redirect
+
+app = Flask(__name__)
+app.secret_key = "HAI-SANSAR-2026-SECURE"
+
+# --- à¤•à¥‰à¤¨à¥à¤«à¤¼à¤¿à¤—à¤°à¥‡à¤¶à¤¨ ---
+config = {
+    "status": "Strong & Active",
+    "gateway": "Stripe / UPI Global",
+    "price": "$9.99 / â‚¹820",
+    "admin_upi": "harigovind91@upi"
+}
+
+# --- Google AI Studio UI ---
+UI_HTML = """
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI PRO - Google AI Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0b0f19; color: #f0f6fc; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #111827; border-right: 1px solid #1f2937; }
+        .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid #374151; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <aside class="sidebar w-64 hidden lg:flex flex-col p-6">
+        <div class="flex items-center space-x-3 mb-10">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg shadow-lg"></div>
+            <h1 class="text-xl font-black text-white">HAI PRO</h1>
+        </div>
+        <nav class="flex-1 space-y-4 text-sm font-medium">
+            <a href="/" class="block text-blue-400 bg-blue-900/20 p-2 rounded-lg">ðŸ’¬ Chat Mode</a>
+            <a href="#" onclick="showPay()" class="block text-gray-400 hover:text-white p-2">ðŸ’Ž Upgrade Plan</a>
+            <a href="/logout" class="block text-gray-400 hover:text-red-400 p-2 border-t border-gray-800 pt-4">ðŸ”“ Logout</a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col">
+        <header class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#0b0f19]">
+            <span class="text-[10px] text-green-400 font-black uppercase tracking-widest">â— {{ status }}</span>
+            <div class="flex space-x-3 text-xs text-gray-500 uppercase font-bold">Secure Gateway: {{ gateway }}</div>
+        </header>
+
+        <main class="flex-1 p-6 overflow-y-auto">
+            <div id="messages" class="max-w-4xl mx-auto space-y-6">
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-[10px] font-bold">AI</div>
+                    <div class="glass p-5 rounded-2xl max-w-xl text-sm shadow-xl border border-gray-700">
+                        à¤¨à¤®à¤¸à¥à¤¤à¥‡ à¤®à¤¾à¤²à¤¿à¤•! à¤†à¤ªà¤•à¤¾ **HAI Backend** à¤…à¤¬ Google AI Studio à¤®à¥‹à¤¡ à¤®à¥‡à¤‚ à¤²à¤¾à¤‡à¤µ à¤¹à¥ˆà¥¤
+                        à¤†à¤ª à¤¯à¤¹à¤¾à¤ à¤«à¤¾à¤‡à¤² à¤…à¤ªà¤²à¥‹à¤¡ à¤”à¤° à¤­à¥à¤—à¤¤à¤¾à¤¨ à¤ªà¥à¤°à¤¬à¤‚à¤§à¤¨ à¤•à¤° à¤¸à¤•à¤¤à¥‡ à¤¹à¥ˆà¤‚à¥¤
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="p-6 bg-gradient-to-t from-[#0b0f19] to-transparent">
+            <div class="max-w-4xl mx-auto glass p-2 rounded-3xl flex items-center shadow-2xl border-gray-600">
+                <label class="p-3 cursor-pointer hover:bg-gray-800 rounded-full transition"><span class="text-xl">âž•</span><input type="file" class="hidden"></label>
+                <input type="text" id="userInput" placeholder="à¤®à¥à¤à¤¸à¥‡ à¤•à¥à¤› à¤­à¥€ à¤ªà¥‚à¤›à¥‡à¤‚ à¤¯à¤¾ à¤¡à¤¿à¤œà¤¾à¤‡à¤¨ à¤•à¤°à¤µà¤¾à¤à¤‚..." class="flex-1 bg-transparent border-none text-white focus:ring-0 px-4 text-lg">
+                <button onclick="handleAI()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-2xl font-black transition shadow-lg">SEND</button>
+            </div>
+        </footer>
+    </div>
+
+    <div id="payModal" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-6 text-center">
+        <div class="glass p-10 rounded-[50px] max-w-sm w-full border-blue-500 shadow-2xl shadow-blue-500/20">
+            <h2 class="text-2xl font-black mb-4 uppercase">Advance Mode</h2>
+            <div class="bg-gray-900/50 p-6 rounded-3xl mb-8 flex justify-between items-center border border-gray-800">
+                <span class="text-2xl font-black text-blue-400">{{ price }}</span>
+            </div>
+            <button onclick="alert('Pay to: {{ admin_upi }}')" class="w-full bg-blue-600 py-4 rounded-2xl font-black shadow-lg">PAY & ACTIVATE</button>
+            <button onclick="document.getElementById('payModal').classList.add('hidden')" class="mt-4 text-gray-600 text-[10px] font-bold uppercase">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function showPay() { document.getElementById('payModal').classList.remove('hidden'); }
+        function handleAI() {
+            const val = document.getElementById('userInput').value.toLowerCase();
+            if(val.includes('design') || val.includes('create') || val.includes('premium')) {
+                showPay();
+            } else if(val) {
+                document.getElementById('messages').innerHTML += `<div class="text-right text-blue-400 font-bold p-2">You: ${val}</div>`;
+                document.getElementById('userInput').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def home():
+    if not session.get('auth'): return redirect('/login')
+    return render_template_string(UI_HTML, **config)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        session['auth'] = True
+        return redirect('/')
+    return "<body style='background:#0b0f19;color:white;display:flex;align-items:center;justify-center;height:100vh;flex-direction:column;font-family:sans-serif;'><h1>HAI MASTER LOGIN</h1><form method='post'><button style='background:#2563eb;color:white;padding:15px 50px;border-radius:15px;border:none;cursor:pointer;font-weight:bold;margin-top:20px;'>Sign in to Workspace</button></form></body>"
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/login')
+
+if __name__ == "__main__":
+    app.run(debug=True)
