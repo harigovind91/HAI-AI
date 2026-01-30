@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI - Hari AI Studio</title>
+    <style>
+        /* सितारों के लिए कैनवास को पीछे सेट किया गया है */
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* यह कंटेंट के पीछे रहेगा */
+            background: radial-gradient(circle at center, #001d3d 0%, #000000 100%);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .content-container {
+            position: relative;
+            z-index: 1; /* कंटेंट सितारों के ऊपर दिखेगा */
+        }
+    </style>
+</head>
+<body style="background:#000; color:#fff; margin:0; font-family:sans-serif; display:flex; flex-direction:column; min-height:100vh;">
+
+    <canvas id="stars-canvas"></canvas>
+
+    <div class="content-container" style="flex: 1; display:flex; align-items:center; justify-content:center; text-align:center;">
+        <div>
+            <h1 style="font-size:5rem; font-style:italic; color:#3b82f6; margin-bottom:20px; text-shadow: 0 0 20px rgba(59, 130, 246, 0.6);">HAI</h1>
+            <p style="color:#aaa; letter-spacing: 1px;">World's Most Advanced AI Studio</p>
+
+            <button onclick="window.location.href='/studio'" style="padding:15px 40px; border:none; border-radius:50px; background:#3b82f6; color:#fff; font-weight:bold; cursor:pointer; margin-bottom: 20px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);">
+                ENTER STUDIO
+            </button>
+
+            <br>
+
+            <a href="upi://pay?pa=harigovindsingh91-2@okhdfcbank&pn=HAI%20Global%20Studio&am=820&cu=INR"
+               onclick="showSuccess()"
+               style="padding:12px 25px; border:1px solid #3b82f6; border-radius:50px; background:transparent; color:#3b82f6; font-weight:bold; text-decoration:none; display:inline-block; transition: 0.3s;">
+               PAY ₹820 VIA GOOGLE PAY
+            </a>
+
+            <div id="payment-msg" style="display:none; margin-top:20px; color:#10b981; font-weight:bold;">
+                पेमेंट ऐप खुल रहा है... भुगतान के बाद स्क्रीनशॉट लेकर सपोर्ट पर भेजें।
+            </div>
+        </div>
+    </div>
+
+    <footer style="position: relative; z-index: 1; padding: 20px; background: rgba(17, 17, 17, 0.8); text-align: center; border-top: 1px solid #333; color: #888; font-size: 12px;">
+        <p>© 2026 HAI (Hari AI) - All Rights Reserved</p>
+        <div style="margin: 10px 0;">
+            <a href="#" style="color: #3b82f6; text-decoration: none;">Terms & Conditions</a> |
+            <a href="#" style="color: #3b82f6; text-decoration: none;">Privacy Policy</a> |
+            <a href="#" style="color: #3b82f6; text-decoration: none;">Refund Policy</a>
+        </div>
+        <p>Support: harigov91@gmail.com | Price: ₹820</p>
+    </footer>
+
+    <script>
+        // --- सितारों का कोडिंग ---
+        const canvas = document.getElementById('stars-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5;
+                this.speed = Math.random() * 0.2 + 0.1; // अपने आप धीरे चलने के लिए
+                this.opacity = Math.random();
+                this.blink = Math.random() * 0.02;
+            }
+            update() {
+                this.y -= this.speed; // सितारों का ऊपर की तरफ बहना
+                if (this.y < 0) this.y = canvas.height;
+                
+                this.opacity += this.blink;
+                if (this.opacity > 1 || this.opacity < 0) this.blink = -this.blink;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // सितारों को भरना
+        for (let i = 0; i < 150; i++) {
+            stars.push(new Star());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // पेमेंट मैसेज फंक्शन
+        function showSuccess() {
+            document.getElementById('payment-msg').style.display = 'block';
+        }
+    </script>
+</body>
+              </html>
+  
