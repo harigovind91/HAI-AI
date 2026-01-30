@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI Global - Quantum Entry</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
+        canvas { display: block; }
+        
+        /* Overlay Content */
+        #ui-layer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hai-logo {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 15px;
+            text-transform: uppercase;
+            background: linear-gradient(to bottom, #fff 30%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(79, 172, 254, 0.8));
+            opacity: 0;
+            animation: emerge 3s ease-out forwards;
+        }
+
+        .status-bar {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #4facfe;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            opacity: 0.7;
+        }
+
+        @keyframes emerge {
+            0% { opacity: 0; transform: scale(0.8) translateY(20px); filter: blur(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+
+        .enter-btn {
+            margin-top: 50px;
+            padding: 15px 40px;
+            background: transparent;
+            border: 1px solid rgba(79, 172, 254, 0.5);
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 5px;
+            transition: 0.5s;
+            pointer-events: auto;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+
+        .enter-btn:hover {
+            background: rgba(79, 172, 254, 0.2);
+            box-shadow: 0 0 30px rgba(79, 172, 254, 0.5);
+            border-color: #4facfe;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="hai-logo">HAI Studio</div>
+        <div class="status-bar">Synchronizing Global Intelligence...</div>
+        <button class="enter-btn" onclick="location.href='/studio'">Enter Core</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        let scene, camera, renderer, starGeo, stars;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 1;
+            camera.rotation.x = Math.PI/2;
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            starGeo = new THREE.BufferGeometry();
+            const positions = [];
+            const velocities = [];
+
+            for(let i=0; i<6000; i++) {
+                positions.push(Math.random() * 600 - 300);
+                positions.push(Math.random() * 600 - 300);
+                positions.push(Math.random() * 600 - 300);
+                velocities.push(0);
+            }
+
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            
+            let sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/circle.png');
+            let starMaterial = new THREE.PointsMaterial({
+                color: 0x4facfe,
+                size: 0.7,
+                map: sprite,
+                transparent: true
+            });
+
+            stars = new THREE.Points(starGeo, starMaterial);
+            scene.add(stars);
+
+            animate();
+        }
+
+        function animate() {
+            const positions = starGeo.attributes.position.array;
+            
+            for(let i=0; i<positions.length; i+=3) {
+                positions[i+1] -= 1.5; // Velocity
+                if(positions[i+1] < -200) {
+                    positions[i+1] = 200;
+                }
+            }
+            
+            starGeo.attributes.position.needsUpdate = true;
+            stars.rotation.y += 0.002;
+            
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        init();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
+
