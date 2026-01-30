@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI GLOBAL STUDIO - Gemini Style</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        canvas { display: block; filter: contrast(1.2) brightness(1.2); }
+        
+        #controls {
+            position: absolute;
+            bottom: 5%;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+        .btn {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+            padding: 10px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        .btn:hover { background: #3b82f6; color: white; }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+        <button class="btn" onclick="init()">Re-Play Formation</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        let particles = [];
+        let animationFrame;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', () => {
+            resize();
+            init();
+        });
+
+        class Particle {
+            constructor(targetX, targetY) {
+                // सितारे शुरुआत में स्क्रीन के बाहर या चारों ओर घूमते हुए आएंगे
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                
+                this.size = Math.random() * 2 + 0.5;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                
+                // घूमने (Vortex) के लिए वेरिएबल्स
+                this.angle = Math.random() * Math.PI * 2;
+                this.velocity = Math.random() * 15 + 5;
+                this.distanceFromCenter = Math.random() * canvas.width;
+                
+                this.color = `hsla(${210 + Math.random() * 40}, 100%, 75%, ${Math.random()})`;
+                this.friction = 0.95;
+                this.ease = 0.05;
+                this.morphing = false;
+
+                // 2 सेकंड बाद नाम बनाना शुरू करेंगे
+                setTimeout(() => { this.morphing = true; }, 1500);
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            update() {
+                if (!this.morphing) {
+                    // शुरुआत में चक्रवात (Vortex) की तरह घूमना
+                    this.angle += 0.02;
+                    this.x = canvas.width / 2 + Math.cos(this.angle) * this.distanceFromCenter;
+                    this.y = canvas.height / 2 + Math.sin(this.angle) * this.distanceFromCenter;
+                    this.distanceFromCenter *= 0.99; // धीरे-धीरे केंद्र की ओर आना
+                } else {
+                    // नाम बनाने के लिए अपनी जगह पर सेट होना
+                    let dx = this.targetX - this.x;
+                    let dy = this.targetY - this.y;
+                    this.x += dx * this.ease;
+                    this.y += dy * this.ease;
+                }
+            }
+        }
+
+        function init() {
+            resize();
+            particles = [];
+            
+            // ऑफ-स्क्रीन टेक्स्ट बनाना ताकि पिक्सेल डेटा मिल सके
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            
+            // "HAI" को बड़ा और बोल्ड बनाना
+            let fontSize = Math.min(canvas.width / 4, 180);
+            ctx.font = `italic 900 ${fontSize}px Arial`;
+            ctx.fillText("HAI", canvas.width / 2, canvas.height / 2);
+
+            // "GLOBAL STUDIO" नीचे
+            ctx.font = `bold ${fontSize / 4}px Arial`;
+            ctx.fillText("GLOBAL STUDIO", canvas.width / 2, canvas.height / 2 + fontSize / 3);
+
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // हर 4थे पिक्सेल पर एक सितारा रखना (परफॉरमेंस के लिए)
+            for (let y = 0; y < canvas.height; y += 4) {
+                for (let x = 0; x < canvas.width; x += 4) {
+                    const index = (y * canvas.width + x) * 4;
+                    if (pixels[index + 3] > 128) {
+                        particles.push(new Particle(x, y));
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            // हल्का सा साया (Trail) ताकि घूमते हुए सितारे "Gemini" जैसे दिखें
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            animationFrame = requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
