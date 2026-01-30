@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI GLOBAL STUDIO - Particle Galaxy</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        canvas { display: block; }
+        #ui {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+        }
+        .btn-launch {
+            padding: 15px 40px;
+            background: transparent;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: 0.5s;
+            text-transform: uppercase;
+        }
+        .btn-launch:hover { background: #3b82f6; color: #fff; box-shadow: 0 0 20px #3b82f6; }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas1"></canvas>
+    
+    <div id="ui">
+        <button class="btn-launch" onclick="location.reload()">Re-Animate Galaxy</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas1');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const mouse = { x: 0, y: 0, radius: 100 };
+
+        // नाम को सितारों में बदलने के लिए सेटिंग्स
+        const textConfig = {
+            text: "HAI",
+            fontSize: 150,
+            yOffset: canvas.height / 2
+        };
+
+        function init() {
+            ctx.fillStyle = 'white';
+            ctx.font = `italic 900 ${textConfig.fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText(textConfig.text, canvas.width / 2, textConfig.yOffset);
+            
+            // "GLOBAL STUDIO" छोटा नीचे
+            ctx.font = `30px Arial`;
+            ctx.fillText("GLOBAL STUDIO", canvas.width / 2, textConfig.yOffset + 50);
+
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles = [];
+            for (let y = 0; y < data.height; y += 4) {
+                for (let x = 0; x < data.width; x += 4) {
+                    if (data.data[(y * 4 * data.width) + (x * 4) + 3] > 128) {
+                        particles.push(new Particle(x, y));
+                    }
+                }
+            }
+        }
+
+        class Particle {
+            constructor(x, y) {
+                this.targetX = x;
+                this.targetY = y;
+                // शुरुआत में सितारे स्क्रीन पर कहीं भी बिखरे होंगे (गुच्छा)
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 30) + 1;
+                this.color = `hsla(${200 + Math.random() * 30}, 100%, 70%, ${Math.random()})`;
+                this.angle = Math.random() * 360;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            update() {
+                // सितारों का घूमते हुए नाम की जगह पर आना
+                let dx = this.targetX - this.x;
+                let dy = this.targetY - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                let forceX = dx / 20;
+                let forceY = dy / 20;
+
+                if (distance > 1) {
+                    this.x += forceX;
+                    this.y += forceY;
+                    // हल्का सा घुमाव (Rotation effect)
+                    this.x += Math.sin(this.angle) * 2;
+                    this.angle += 0.1;
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // हल्का ट्रेल इफेक्ट
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+        });
+    </script>
+</body>
+</html>
