@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI Global Studio | Master Integrated</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #22c55e; --bg: #030508; }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.08); }
+        .preview-pane { background: #fff; border-radius: 16px; width: 100%; height: 100%; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .chat-area { transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); height: 65px; }
+        .expanded { height: 450px !important; }
+        .gradient-text { background: linear-gradient(to right, #22c55e, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body>
+
+    <header class="p-4 flex justify-between items-center glass z-50">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-green-500 rounded-lg shadow-lg shadow-green-500/20">
+                <i class="fas fa-atom text-black text-xl"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight">HAI GLOBAL <span class="text-green-500">STUDIO</span></h1>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <a href="welcome.html" class="text-gray-400 hover:text-blue-400 transition text-sm font-bold flex items-center gap-2">
+                <i class="fas fa-door-open"></i> WELCOME
+            </a>
+            <a href="user_dashboard.html" class="text-gray-400 hover:text-green-500 transition text-sm font-bold flex items-center gap-2">
+                <i class="fas fa-columns"></i> DASHBOARD
+            </a>
+            <button id="vBtn" style="display:none;" onclick="toggleVacancy()"></button> 
+            
+            <button onclick="openPayment()" class="bg-white text-black px-5 py-2 rounded-full font-bold text-sm hover:bg-green-500 hover:text-white transition-all">
+                Join Pro
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 relative bg-[#0a0c10]">
+        <div id="placeholder" class="h-full w-full border-2 border-dashed border-gray-800 rounded-2xl flex flex-col items-center justify-center">
+            <div class="p-6 rounded-full bg-gray-900 mb-4 cursor-pointer" onclick="window.location.href='welcome.html'">
+                <i class="fas fa-rocket text-3xl text-blue-500"></i>
+            </div>
+            <p class="text-gray-500 font-medium italic">Welcome to Scientist Harigovind's HAI Studio</p>
+        </div>
+        
+        <iframe id="livePreview" class="preview-pane hidden"></iframe>
+
+        <div id="vacancyModule" class="hidden absolute inset-0 z-40 flex items-center justify-center bg-black/80 p-6">
+            <div class="glass p-8 rounded-[32px] w-full max-w-lg border border-gray-700">
+                <h2 class="text-2xl font-bold mb-4 gradient-text">Junior Scientist Hiring</h2>
+                <div class="space-y-4">
+                    <input type="text" id="vName" placeholder="नाम" class="w-full bg-gray-900 p-4 rounded-xl outline-none">
+                    <button onclick="toggleVacancy()" class="w-full text-gray-500 text-xs uppercase">Disable Mode Active</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <section class="p-4 pt-0">
+        <div id="chatBox" class="glass rounded-3xl p-3 flex flex-col chat-area overflow-hidden">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleChat()" class="p-2 text-gray-400 hover:text-green-500"><i id="arrowIcon" class="fas fa-chevron-up"></i></button>
+                <input type="text" id="commandInput" class="flex-1 bg-transparent border-none focus:ring-0 text-sm placeholder-gray-600" placeholder="HAI, नया विज्ञान प्रोजेक्ट शुरू करो...">
+                <button onclick="sendToBackend()" class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-black shadow-lg"><i class="fas fa-location-arrow"></i></button>
+            </div>
+            <div id="console" class="mt-4 flex-1 overflow-y-auto text-[13px] font-mono text-gray-400 border-t border-gray-800 pt-4 px-2">
+                <div id="messages">● HAI Kernel v2.0 | Connected to Harigovind's Cloud</div>
+            </div>
+        </div>
+
+        <nav class="flex justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+            <button onclick="window.location.href='index.html'" class="flex flex-col items-center gap-1 text-white"><i class="fas fa-th-large text-lg"></i>Home</button>
+            <button onclick="saveCurrentProject()" class="flex flex-col items-center gap-1 hover:text-green-500"><i class="fas fa-cloud-upload-alt text-lg"></i>Save</button>
+            <button onclick="window.location.href='welcome.html'" class="flex flex-col items-center gap-1 hover:text-blue-400"><i class="fas fa-star text-lg"></i>Welcome</button>
+            <button onclick="window.location.href='user_dashboard.html'" class="flex flex-col items-center gap-1 hover:text-white"><i class="fas fa-folder-open text-lg"></i>Projects</button>
+        </nav>
+    </section>
+
+    <div id="upiModal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/90 px-4">
+        <div class="bg-white p-8 rounded-[32px] w-full max-w-sm text-center text-black">
+            <h3 class="text-2xl font-black mb-1 italic">HAI STUDIO PRO</h3>
+            <a href="upi://pay?pa=harigovindsingh91-2@okhdfcbank&pn=HAI%20Studio&am=1500&cu=INR" class="flex items-center justify-center gap-3 bg-[#111] text-white py-4 rounded-2xl font-bold my-6">
+                <i class="fas fa-qrcode"></i> PAY ₹1500
+            </a>
+            <button onclick="closePayment()" class="text-gray-400 text-xs">EXIT</button>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "http://localhost:8000";
+        const USER_ID = 1;
+
+        function toggleChat() { document.getElementById('chatBox').classList.toggle('expanded'); }
+        function openPayment() { document.getElementById('upiModal').classList.remove('hidden'); }
+        function closePayment() { document.getElementById('upiModal').classList.add('hidden'); }
+        function toggleVacancy() { /* Logic kept but disabled as per request */ }
+
+        async function saveCurrentProject() {
+            const preview = document.getElementById('livePreview');
+            const projectName = prompt("Project Name?");
+            if(!projectName) return;
+            try {
+                await fetch(`${BACKEND_URL}/api/save-project`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user_id: USER_ID, project_name: projectName, code: preview.srcdoc })
+                });
+                alert("Project Saved Successfully!");
+            } catch (err) { alert("Server not connected."); }
+        }
+
+        async function sendToBackend() {
+            const input = document.getElementById('commandInput').value;
+            if(!input) return;
+            document.getElementById('placeholder').classList.add('hidden');
+            const preview = document.getElementById('livePreview');
+            preview.classList.remove('hidden');
+            preview.srcdoc = `<html><body style="background:#030508; color:white; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif;"><div><h1 style="color:#22c55e;">${input}</h1><p>Created by HAI Studio</p></div></body></html>`;
+            document.getElementById('messages').innerHTML += `<div>● Deployment Success: ${input}</div>`;
+            document.getElementById('commandInput').value = '';
+        }
+    </script>
+</body>
+</html>
+
