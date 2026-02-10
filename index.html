@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>HAI Global Studio | Master Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #030508; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .editor-bg { background: #0a0c12; border-radius: 20px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+    <header class="p-4 glass flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-atom text-green-500 text-2xl"></i>
+            <h1 class="font-black tracking-tighter">HAI STUDIO <span class="text-green-500">PRO</span></h1>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="HAI.upload()" class="text-xs font-bold hover:text-blue-400"><i class="fas fa-upload"></i> UPLOAD</button>
+            <button onclick="HAI.deploy()" class="bg-green-600 px-4 py-1.5 rounded-full text-[10px] font-bold">DEPLOY LIVE</button>
+            <button onclick="HAI.publish()" class="bg-blue-600 px-4 py-1.5 rounded-full text-[10px] font-bold">PUBLISH</button>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 grid grid-cols-12 gap-4">
+        <aside class="col-span-2 glass rounded-2xl p-4 flex flex-col gap-4">
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-code mr-2"></i> Projects</button>
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-database mr-2"></i> Memory</button>
+            <button onclick="window.location.href='admin_panel.html'" class="mt-auto p-2 bg-red-900/20 text-red-500 rounded text-xs text-center border border-red-900/50">ADMIN PANEL</button>
+        </aside>
+
+        <section class="col-span-10 editor-bg p-4 relative flex flex-col">
+            <div id="live-preview" class="flex-1 border border-white/5 rounded-xl mb-4 p-4 font-mono text-green-500 overflow-y-auto">
+                // System Waiting for Scientist Harigovind...
+            </div>
+
+            <div class="h-16 glass rounded-full flex items-center px-6 gap-4">
+                <button onclick="HAI.startVoice()" id="mic-btn"><i class="fas fa-microphone text-xl text-blue-400"></i></button>
+                <input type="text" id="cmd-input" placeholder="HAI, नया विज्ञान प्रोजेक्ट डिप्लॉय करो..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm">
+                <button onclick="HAI.execute()" class="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center"><i class="fas fa-arrow-up"></i></button>
+            </div>
+        </section>
+    </main>
+    <script src="neural_engine.js"></script>
+</body>
+          </html>
+
