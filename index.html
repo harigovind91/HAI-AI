@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI STUDIO | Build at the speed of thought</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0e1117; 
+            --sidebar: #161b22;
+            --accent: #00d2ff; 
+            --accent-soft: rgba(0, 210, 255, 0.1);
+            --border: #30363d; 
+            --text: #c9d1d9;
+            --text-dim: #8b949e;
+            --button-hover: #1f2937;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Replit Style Header */
+        nav { 
+            height: 56px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 20px; 
+            border-bottom: 1px solid var(--border); 
+            background: var(--bg);
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+
+        .left-nav { display: flex; align-items: center; gap: 20px; }
+        .logo { font-size: 1.2rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+        
+        .search-bar-nav {
+            background: var(--sidebar);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 8px;
+            width: 300px;
+            display: flex;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+
+        /* Hero Section - Replit "Ghost" Look */
+        .hero { 
+            padding: 100px 5% 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .badge {
+            background: var(--accent-soft);
+            color: var(--accent);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        h1 { 
+            font-size: clamp(2.5rem, 6vw, 4.5rem); 
+            font-weight: 800; 
+            line-height: 1; 
+            color: #fff;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+        }
+
+        .hero p { 
+            color: var(--text-dim); 
+            font-size: 1.25rem; 
+            max-width: 600px; 
+            margin-bottom: 40px; 
+        }
+
+        /* The Replit Input Box */
+        .prompt-container {
+            width: 100%;
+            max-width: 800px;
+            background: #1c2128;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: border-color 0.3s;
+        }
+
+        .prompt-container:focus-within { border-color: var(--accent); }
+
+        .prompt-container input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 16px;
+            font-size: 1.1rem;
+            outline: none;
+        }
+
+        .create-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Workspace Preview (Mockup) */
+        .preview-container {
+            margin-top: 60px;
+            width: 90%;
+            max-width: 1100px;
+            background: var(--sidebar);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+
+        .window-header {
+            background: #21262d;
+            padding: 10px 15px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
+
+        .code-area {
+            display: grid;
+            grid-template-columns: 200px 1fr 300px;
+            height: 400px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
+
+        .file-tree { border-right: 1px solid var(--border); padding: 20px; color: var(--text-dim); }
+        .editor { padding: 20px; color: var(--accent); position: relative; }
+        .terminal { background: #000; border-left: 1px solid var(--border); padding: 20px; color: #27c93f; }
+
+        /* Floating Cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 80px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .f-card {
+            background: var(--sidebar);
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 16px;
+            transition: 0.3s;
+        }
+
+        .f-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .f-card i { color: var(--accent); margin-bottom: 15px; }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 5%;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .code-area { grid-template-columns: 1fr; }
+            .file-tree, .terminal { display: none; }
+            .features-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="left-nav">
+        <div class="logo"><i data-lucide="terminal" size="24"></i> HAI STUDIO</div>
+        <div class="search-bar-nav"><i data-lucide="search" size="16" style="margin-right:8px"></i> Search Scientist Harigovind's Projects...</div>
+    </div>
+    <div class="nav-links" style="display: flex; gap: 20px; align-items: center;">
+        <button style="background:transparent; border:1px solid var(--border); color:white; padding:8px 16px; border-radius:8px; cursor:pointer;" onclick="sc()">Upgrade</button>
+        <div style="width:32px; height:32px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#000; font-weight:bold;">H</div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="badge">Next-Gen Scientific AI Engine</div>
+    <h1>Build software faster<br>with HAI Studio.</h1>
+    <p>Harigovind के द्वारा निर्मित संसार का सबसे शक्तिशाली वातावरण। जहाँ 'संस्कार मॉड्यूल' और वैज्ञानिक 'सात्विक प्रेम' का शोध होता है।</p>
+    
+    <div class="prompt-container">
+        <i data-lucide="sparkles" style="margin-left:15px; color:var(--accent)"></i>
+        <input type="text" placeholder="Design a neural network for selfless relationships...">
+        <button class="create-btn">
+            Create Repl <i data-lucide="plus"></i>
+        </button>
+    </div>
+
+    <div class="preview-container">
+        <div class="window-header">
+            <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+            <span style="margin-left: 20px; font-size: 12px; color: var(--text-dim);">main.py — HAI Studio</span>
+        </div>
+        <div class="code-area">
+            <div class="file-tree">
+                <div style="margin-bottom:10px; color:#fff">Files</div>
+                <div style="font-size:13px">📁 src/modules</div>
+                <div style="font-size:13px; color:var(--accent); margin-left:10px">🐍 sanskar.py</div>
+                <div style="font-size:13px; margin-left:10px">🐍 engine.ai</div>
+            </div>
+            <div class="editor">
+                <pre><code><span style="color:#ff79c6">import</span> hai_engine
+
+<span style="color:#6272a4"># Initialize Sanskar Module</span>
+<span style="color:#ff79c6">def</span> <span style="color:#50fa7b">init_peace</span>():
+    print(<span style="color:#f1fa8c">"वैज्ञानिक सात्विक प्रेम सक्रिय..."</span>)
+    <span style="color:#ff79c6">return</span> hai.unlimited_potential()
+
+init_peace()</code></pre>
+            </div>
+            <div class="terminal">
+                <div>> HAI Engine Booting...</div>
+                <div>> Status: Optimal</div>
+                <div>> Scientist Harigovind logged in.</div>
+                <div style="color:#fff; margin-top:10px">█</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features-grid">
+    <div class="f-card">
+        <i data-lucide="layers"></i>
+        <h3>Scientific Intelligence</h3>
+        <p>HAI (Hari AI) uses advanced neural nodes for research and development.</p>
+    </div>
+    <div class="f-card">
+        <i data-lucide="heart"></i>
+        <h3>Sanskar Module</h3>
+        <p>Integrated 'नूतन शिक्षा पद्धति' for the future generation's ethics.</p>
+    </div>
+    <div class="f-card">
+        <i data-lucide="zap"></i>
+        <h3>Instant Deploy</h3>
+        <p>Go from idea to global scale in seconds with HAI Cloud.</p>
+    </div>
+</section>
+
+<footer>
+    <div>© 2026 HAI BRAND by Scientist Harigovind</div>
+    <div style="display:flex; gap:20px">
+        <span>Terms</span>
+        <span>Privacy</span>
+        <span style="color:var(--accent)">System: Operational</span>
+    </div>
+</footer>
+
+<script>
+    lucide.createIcons();
+    function sc() {
+        const _u = "harigovindsingh91-2";
+        const _h = "okhdfcbank";
+        window.location.href = `upi://pay?pa=${_u}@${_h}&pn=HAI%20Studio&cu=INR`;
+    }
+</script>
+</body>
+                                                                                                 </html>
+  
