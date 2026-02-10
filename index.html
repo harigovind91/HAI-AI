@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI STUDIO - Replit Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <style>
+        :root { --bg: #0e1117; --sidebar: #161b22; --accent: #00d2ff; --border: #30363d; --text: #c9d1d9; }
+        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+        /* Full IDE Layout */
+        .ide-wrapper { display: flex; flex-direction: column; height: 100vh; }
+        
+        /* Top Header */
+        .ide-header { height: 45px; background: var(--sidebar); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
+        .run-btn { background: #238636; color: white; border: none; padding: 5px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .run-btn:hover { background: #2ea043; }
+
+        /* Main Workspace */
+        .main-content { display: flex; flex: 1; overflow: hidden; }
+
+        /* Sidebar - File Explorer */
+        .sidebar { width: 240px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .side-label { padding: 10px 15px; font-size: 12px; font-weight: bold; color: #8b949e; text-transform: uppercase; }
+        .file-link { padding: 8px 15px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .file-link:hover { background: #21262d; color: var(--accent); }
+        .file-link.active { background: #1c2128; border-left: 2px solid var(--accent); }
+
+        /* Code Editor Area */
+        .editor-area { flex: 1; background: #0d1117; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+        .tabs { display: flex; background: #161b22; height: 35px; border-bottom: 1px solid var(--border); }
+        .tab { padding: 0 20px; display: flex; align-items: center; font-size: 13px; border-right: 1px solid var(--border); background: #0d1117; }
+
+        /* Input Box - Replit Prompt */
+        .prompt-container { padding: 20px; background: #0d1117; border-top: 1px solid var(--border); }
+        .replit-input { background: #161b22; border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; }
+        .replit-input textarea { flex: 1; background: transparent; border: none; color: white; outline: none; resize: none; font-size: 14px; }
+
+        /* Preview Panel */
+        .preview-panel { width: 400px; background: white; display: flex; flex-direction: column; }
+        .preview-header { height: 35px; background: #f0f0f0; color: #333; display: flex; align-items: center; padding: 0 10px; font-size: 12px; border-bottom: 1px solid #ddd; justify-content: space-between; }
+
+        /* Brand Footer */
+        .footer-brand { height: 30px; background: var(--sidebar); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; font-size: 11px; }
+        .pay-link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="ide-wrapper">
+    <header class="ide-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="background:var(--accent); width:24px; height:24px; border-radius:4px;"></div>
+            <span style="font-weight:bold; letter-spacing:1px;">HAI STUDIO</span>
+        </div>
+        <button class="run-btn" onclick="runCode()"><i data-lucide="play" size="16"></i> Run</button>
+        <div style="color:#8b949e; font-size:12px;">harigovind / <span style="color:white">main-engine</span></div>
+    </header>
+
+    <div class="main-content">
+        <aside class="sidebar">
+            <div class="side-label">Files</div>
+            <div class="file-link active"><i data-lucide="file-code" size="16"></i> index.html</div>
+            <div class="file-link"><i data-lucide="file-json" size="16"></i> package.json</div>
+            <div class="file-link"><i data-lucide="terminal" size="16"></i> main.py</div>
+            <div style="margin-top:auto;" class="file-link" onclick="goToPay()"><i data-lucide="credit-card" size="16"></i> Upgrade Plan</div>
+        </aside>
+
+        <section class="editor-area">
+            <div class="tabs"><div class="tab">index.html</div></div>
+            <div style="flex:1; padding:20px; font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #79c0ff;">
+                <span style="color:#ff7b72;">&lt;!DOCTYPE</span> <span style="color:#a5d6ff;">html</span><span style="color:#ff7b72;">&gt;</span><br>
+                <span style="color:#ff7b72;">&lt;html</span> <span style="color:#a5d6ff;">lang=</span><span style="color:#a5d6ff;">"hi"</span><span style="color:#ff7b72;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ff7b72;">&lt;body&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffa657;">&lt;h1&gt;</span> HAI Studio is Online <span style="color:#ffa657;">&lt;/h1&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ff7b72;">&lt;/body&gt;</span><br>
+                <span style="color:#ff7b72;">&lt;/html&gt;</span>
+            </div>
+
+            <div class="prompt-container">
+                <div class="replit-input">
+                    <i data-lucide="sparkles" style="color:var(--accent)"></i>
+                    <textarea id="aiInput" placeholder="क्या बनाना चाहते हैं? (जैसे: 'एक नया पेमेंट गेटवे पेज बनाओ')"></textarea>
+                    <i data-lucide="mic" style="cursor:pointer;" onclick="voice()"></i>
+                    <i data-lucide="send" style="color:var(--accent); cursor:pointer;" onclick="runCode()"></i>
+                </div>
+            </div>
+        </section>
+
+        <aside class="preview-panel">
+            <div class="preview-header">
+                <span>Webview</span>
+                <i data-lucide="rotate-cw" size="14" style="cursor:pointer"></i>
+            </div>
+            <iframe id="output" style="width:100%; flex:1; border:none;" srcdoc="<h1>HAI Studio Output</h1><p>Harigovind जी, कोड यहाँ रन होगा।</p>"></iframe>
+        </aside>
+    </div>
+
+    <footer class="footer-brand">
+        <div>Developed by: <b>Harigovind (World Scientist)</b></div>
+        <div>GATEWAY: <span class="pay-link" onclick="goToPay()">HAI STUDIO BRAND</span></div>
+        <div>Status: <span style="color:#2ea043">● Active</span></div>
+    </footer>
+</div>
+
+<script>
+    lucide.createIcons();
+    function runCode() {
+        const val = document.getElementById('aiInput').value;
+        if(val) alert("HAI AI Engine: '" + val + "' को डिप्लॉय किया जा रहा है...");
+        else alert("कोड रन हो रहा है...");
+    }
+    function goToPay() {
+        window.location.href = "upi://pay?pa=harigovindsingh91-2@okhdfcbank&pn=HAI%20Studio&am=1499.00&cu=INR";
+    }
+    function voice() { alert("Voice Engine Active..."); }
+</script>
+</body>
+</html>
