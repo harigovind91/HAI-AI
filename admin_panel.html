@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>HAI Admin | Security Node</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-red-500 p-10 font-mono">
+    <h1 class="text-3xl font-bold mb-10 border-b border-red-900 pb-4">HAI MASTER CONTROL</h1>
+    <div class="grid grid-cols-3 gap-6">
+        <div class="border border-red-900 p-6 rounded-xl bg-red-950/10">
+            <h3 class="text-white mb-4 italic">EMERGENCY BROADCAST</h3>
+            <button onclick="triggerWar()" class="w-full bg-red-600 text-white font-bold py-3 rounded hover:bg-red-700">युद्ध उदघोष</button>
+        </div>
+    </div>
+    <script>
+        function triggerWar() {
+            const key = prompt("MASTER SECURITY KEY:");
+            if(key === "MASTER_KEY_2026") {
+                alert("GLOBAL BROADCAST ACTIVE: युद्ध चरम पर है!");
+            }
+        }
+    </script>
+</body>
+</html>
