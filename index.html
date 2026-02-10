@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI - Public AI Engine</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <style>
+        :root { --bg: #0b0e14; --panel: #161b22; --accent: #00aaff; --text: #e6edf3; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; }
+
+        /* Navigation Menu */
+        .menu-bar { width: 60px; background: var(--panel); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 25px; border-right: 1px solid #30363d; }
+        .menu-item { cursor: pointer; color: #8b949e; transition: 0.3s; }
+        .menu-item:hover { color: var(--accent); }
+
+        /* Main Workspace */
+        .workspace { flex: 1; display: flex; flex-direction: column; position: relative; }
+        
+        /* Top Header */
+        .header { height: 50px; background: var(--panel); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #30363d; }
+        .deploy-btn { background: #238636; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+
+        /* Large Chat Box - Fixed at Bottom */
+        .chat-container { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; padding-bottom: 150px; }
+        .message { margin-bottom: 20px; max-width: 80%; padding: 12px; border-radius: 12px; background: #21262d; }
+        .ai-message { border-left: 4px solid var(--accent); }
+
+        /* Unified Input Box (The Core Feature) */
+        .input-area { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 800px; background: #1c2128; border: 1px solid #444; border-radius: 15px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .input-row { display: flex; align-items: center; gap: 12px; }
+        #user-input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; resize: none; max-height: 100px; }
+        
+        /* Attachment Controls */
+        .controls { display: flex; gap: 15px; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px; }
+        .icon-btn { cursor: pointer; color: #8b949e; transition: 0.2s; }
+        .icon-btn:hover { color: var(--accent); }
+        
+        /* Hidden Inputs */
+        input[type="file"] { display: none; }
+
+        /* Live Preview Floating Window */
+        .preview-window { position: absolute; top: 70px; right: 20px; width: 300px; height: 200px; background: white; border-radius: 8px; border: 2px solid var(--accent); display: none; overflow: hidden; }
+    </style>
+</head>
+<body>
+
+    <nav class="menu-bar">
+        <div class="menu-item"><i data-lucide="layout-grid"></i></div>
+        <div class="menu-item"><i data-lucide="folder-open"></i></div>
+        <div class="menu-item"><i data-lucide="settings"></i></div>
+    </nav>
+
+    <main class="workspace">
+        <header class="header">
+            <div style="font-weight: bold; font-size: 1.2rem;">HAI Engine <span style="font-weight: normal; font-size: 0.8rem; color: #8b949e;">Public v2.0</span></div>
+            <button class="deploy-btn" onclick="autoDeploy()">
+                <i data-lucide="rocket" size="16"></i> Publish
+            </button>
+        </header>
+
+        <div class="chat-container" id="chat-box">
+            <div class="message ai-message">नमस्ते! मैं HAI (Hari AI) हूँ। मैं आपका कोड लिखने, फाइल मैनेज करने और प्रोजेक्ट को ऑटो-डिप्लॉय करने के लिए तैयार हूँ। आप वॉइस कमांड भी दे सकते हैं!</div>
+        </div>
+
+        <iframe id="preview" class="preview-window"></iframe>
+
+        <div class="input-area">
+            <div class="input-row">
+                <textarea id="user-input" placeholder="HAI से कुछ भी पूछें या कोडिंग करवाएं..." rows="1"></textarea>
+                <i data-lucide="mic" class="icon-btn" id="voice-btn" onclick="startVoice()"></i>
+                <i data-lucide="send" class="icon-btn" style="color:var(--accent)" onclick="handleSend()"></i>
+            </div>
+            
+            <div class="controls">
+                <label class="icon-btn"><i data-lucide="image"></i><input type="file" accept="image/*" onchange="uploadNotify('Gallery')"></label>
+                <label class="icon-btn"><i data-lucide="camera"></i><input type="file" capture="camera" onchange="uploadNotify('Camera')"></label>
+                <label class="icon-btn"><i data-lucide="hard-drive"></i><input type="file" onchange="uploadNotify('Drive/File')"></label>
+                <label class="icon-btn"><i data-lucide="code"></i></label>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Voice Command Integration
+        const voiceBtn = document.getElementById('voice-btn');
+        const userInput = document.getElementById('user-input');
+
+        function startVoice() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'hi-IN';
+            voiceBtn.style.color = 'red';
+            
+            recognition.onresult = (event) => {
+                userInput.value = event.results[0][0].transcript;
+                voiceBtn.style.color = '#8b949e';
+                handleSend();
+            };
+            recognition.start();
+        }
+
+        // Auto Deployment Logic
+        function autoDeploy() {
+            alert("HAI Engine: आपका प्रोजेक्ट ग्लोबल सर्वर्स पर डिप्लॉय (Publish) किया जा रहा है...");
+            document.getElementById('preview').style.display = 'block';
+            document.getElementById('preview').srcdoc = "<html><body style='font-family:sans-serif; text-align:center;'><h1>Project Live!</h1><p>Deploying via HAI Engine</p></body></html>";
+        }
+
+        function handleSend() {
+            const text = userInput.value;
+            if(!text) return;
+
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<div class="message" style="align-self: flex-end; background: var(--accent); color: black;">${text}</div>`;
+            
+            // Simulating AI Response & Auto-Code Generation
+            setTimeout(() => {
+                chatBox.innerHTML += `<div class="message ai-message">समझ गया! मैं आपके लिए फाइलें तैयार कर रहा हूँ और ऑटो-डिप्लॉयमेंट मोड सक्रिय कर रहा हूँ।</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                if(text.toLowerCase().includes('site') || text.toLowerCase().includes('बनाओ')) {
+                    autoDeploy();
+                }
+            }, 1000);
+
+            userInput.value = "";
+        }
+
+        function uploadNotify(type) {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<div class="message ai-message">📎 ${type} से फाइल प्राप्त हुई। HAI इसका विश्लेषण कर रहा है...</div>`;
+        }
+    </script>
+</body>
+</html>
