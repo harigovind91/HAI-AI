@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI STUDIO - Universal Interface</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <style>
+        :root { --bg: #0c0d0f; --chat-bg: #16181d; --accent: #00d2ff; --border: #2d2f36; --header-h: 55px; --footer-h: 40px; }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; overflow: hidden; }
+
+        /* Main Container: Desktop par Side-by-Side, Mobile par Column */
+        .app-wrapper { display: flex; flex-direction: column; height: 100vh; }
+        
+        /* Fixed Header */
+        .main-header { height: var(--header-h); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #000; }
+        .logo { font-weight: 900; color: var(--accent); font-size: 20px; }
+
+        .content-body { display: flex; flex: 1; overflow: hidden; }
+
+        /* Left Chat Section */
+        .chat-section { width: 350px; background: var(--chat-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: 0.3s; }
+        .chat-msg-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px; border-radius: 8px; font-size: 13px; max-width: 90%; }
+        .ai-msg { background: #21242c; border: 1px solid var(--border); align-self: flex-start; }
+        .user-msg { background: var(--accent); color: #000; align-self: flex-end; font-weight: 600; }
+
+        .input-box { padding: 15px; border-top: 1px solid var(--border); background: var(--chat-bg); }
+        .input-inner { background: #21242c; border-radius: 10px; padding: 8px; border: 1px solid var(--border); }
+        textarea { width: 100%; background: transparent; border: none; color: white; outline: none; resize: none; height: 50px; }
+
+        /* Right Preview Section */
+        .preview-section { flex: 1; display: flex; flex-direction: column; background: #050505; position: relative; }
+        .tab-bar { height: 45px; background: #111; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; gap: 10px; overflow-x: auto; }
+        .tab-btn { padding: 5px 12px; font-size: 12px; background: #222; border-radius: 15px; cursor: pointer; border: 1px solid var(--border); white-space: nowrap; }
+        .tab-btn.active { color: var(--accent); border-color: var(--accent); }
+
+        .view-frame { flex: 1; padding: 20px; overflow-y: auto; font-family: monospace; }
+
+        /* Mobile Adjustments (Responsive) */
+        @media (max-width: 768px) {
+            .content-body { flex-direction: column; }
+            .chat-section { width: 100%; height: 50%; border-right: none; border-bottom: 1px solid var(--border); }
+            .preview-section { height: 50%; }
+            .logo { font-size: 16px; }
+            .tab-btn { font-size: 11px; padding: 4px 10px; }
+        }
+
+        /* Footer */
+        .footer { height: var(--footer-h); border-top: 1px solid var(--border); background: #000; display: flex; align-items: center; justify-content: space-around; font-size: 10px; }
+        .pay-pill { background: #1f2937; color: var(--accent); border: 1px solid var(--accent); padding: 3px 12px; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <header class="main-header">
+        <div class="logo">HAI STUDIO</div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="doPay()" class="pay-pill">PAYMENT GATEWAY</button>
+            <button style="background:#238636; color:white; border:none; padding:5px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">RUN</button>
+        </div>
+    </header>
+
+    <div class="content-body">
+        <div class="chat-section">
+            <div class="chat-msg-area" id="chat">
+                <div class="msg ai-msg">प्रणाम वैज्ञानिक Harigovind जी। HAI Studio इंजन तैयार है।</div>
+            </div>
+            <div class="input-box">
+                <div class="input-inner">
+                    <textarea id="txt" placeholder="नया विचार यहाँ लिखें..."></textarea>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                        <i data-lucide="paperclip" size="16" style="color:#666"></i>
+                        <button onclick="send()" style="background:var(--accent); border:none; border-radius:5px; padding:4px 12px; font-weight:bold; cursor:pointer;">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <div class="tab-bar">
+                <div class="tab-btn active" onclick="chV('code')">main.js</div>
+                <div class="tab-btn" onclick="chV('preview')">Live View</div>
+                <div class="tab-btn" onclick="chV('terminal')">Terminal</div>
+                <div class="tab-btn" onclick="chV('config')">Package.json</div>
+            </div>
+            <div class="view-frame" id="v">
+                <pre style="color:var(--accent)">// HAI Multi-Page Structure
+function init() {
+  console.log("Scientific Engine Online...");
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div>Admin: Harigovind</div>
+        <div>UPI: harigovindsingh91-2@okhdfcbank</div>
+        <div style="color:#2ea043">● System Stable</div>
+    </footer>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    function send() {
+        const t = document.getElementById('txt');
+        if(!t.value) return;
+        document.getElementById('chat').innerHTML += `<div class="msg user-msg">${t.value}</div>`;
+        t.value = "";
+        document.getElementById('chat').scrollTop = 9999;
+    }
+
+    function chV(type) {
+        const v = document.getElementById('v');
+        if(type === 'preview') v.innerHTML = "<h1>Loading Live Preview...</h1><p>Desktop/Mobile optimized view.</p>";
+        else if(type === 'terminal') v.innerHTML = "<p style='color:#0f0'>$ npm start<br>> HAI Studio initialized on 2026...</p>";
+        else if(type === 'config') v.innerHTML = "{ \"name\": \"hai-studio\", \"version\": \"2.0.0\" }";
+        else location.reload();
+    }
+
+    function doPay() {
+        window.location.href = "upi://pay?pa=harigovindsingh91-2@okhdfcbank&pn=HAI%20Studio&am=1499.00&cu=INR";
+    }
+</script>
+</body>
+</html>
