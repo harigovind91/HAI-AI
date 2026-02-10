@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAI STUDIO | Pro Engine</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #000; --accent: #00e5ff; --border: #1a1a1a; --premium: #facc15; --card: #0d0d0d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { background: var(--bg); color: #e0e0e0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+        nav { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 1rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 8px; }
+        
+        .hero { padding: 40px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        h1 { font-size: 3rem; font-weight: 900; letter-spacing: -2px; margin-bottom: 20px; }
+
+        /* Workspace Shell */
+        .shell-preview { width: 95%; max-width: 800px; background: #050505; border: 1px solid var(--border); border-radius: 12px; display: flex; height: 200px; margin-top: 20px; }
+        .sidebar { width: 150px; border-right: 1px solid var(--border); padding: 15px; font-family: 'JetBrains Mono'; font-size: 10px; color: #444; text-align: left; }
+        .code-area { flex: 1; padding: 15px; font-family: 'JetBrains Mono'; font-size: 12px; color: var(--accent); text-align: left; }
+
+        /* ADVANCED CHAT WINDOW */
+        .chat-window {
+            position: fixed; bottom: 90px; right: 25px; width: 360px; height: 520px;
+            background: #080808; border: 1px solid var(--border); border-radius: 20px;
+            display: none; flex-direction: column; z-index: 3000; box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+            overflow: hidden; animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .chat-header { padding: 15px; background: #111; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .chat-body { flex: 1; padding: 15px; font-size: 13px; font-family: 'JetBrains Mono'; color: #888; overflow-y: auto; text-align: left; }
+        
+        /* MULTI-MODAL FOOTER */
+        .chat-footer { padding: 15px; background: #0c0c0c; border-top: 1px solid var(--border); }
+        .input-wrapper { background: #000; border: 1px solid var(--border); border-radius: 12px; padding: 8px; }
+        .chat-input { width: 100%; background: transparent; border: none; color: #fff; padding: 8px; font-size: 13px; margin-bottom: 10px; }
+        
+        .action-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #111; pt: 10px; padding-top: 8px; }
+        .media-actions { display: flex; gap: 12px; color: #666; }
+        .media-actions i:hover { color: var(--accent); cursor: pointer; }
+        
+        .send-group { display: flex; gap: 8px; align-items: center; }
+        .mic-btn { color: #ff4b2b; cursor: pointer; display: flex; align-items: center; }
+        .mic-btn.active { animation: pulse 1.5s infinite; color: #00e5ff; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .chat-trigger {
+            position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px;
+            background: var(--accent); border-radius: 18px; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; z-index: 2000;
+            box-shadow: 0 10px 25px rgba(0, 229, 255, 0.3);
+        }
+
+        /* Hidden Inputs */
+        #fileInput, #cameraInput, #galleryInput { display: none; }
+
+        footer { padding: 20px; font-size: 10px; color: #444; text-align: center; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo"><i data-lucide="shield-check" color="#00e5ff"></i> HAI STUDIO PRO</div>
+    <div style="font-size: 10px; color: #22c55e; font-family: 'JetBrains Mono';">SCIENTIST_HARIGOVIND_ACTIVE</div>
+</nav>
+
+<section class="hero">
+    <h1>Multi-Modal <span style="color: var(--accent)">Intelligence</span></h1>
+    <div class="shell-preview">
+        <div class="sidebar">PROJECT_FILES<br>📁 core_v3<br>📄 vision.sys<br>📄 voice.hai</div>
+        <div class="code-area">
+            <pre><code>// HAI Voice & Vision Init
+System.Media.enableCapture();
+System.AI.loadProcessor('Gemini-3-Vision');
+console.log("Ready for Multi-modal commands...");</code></pre>
+        </div>
+    </div>
+</section>
+
+<div class="chat-window" id="chatWin">
+    <div class="chat-header">
+        <div style="font-size:12px; font-weight:800; color:var(--accent); display:flex; align-items:center; gap:8px;">
+            <i data-lucide="bot" size="16"></i> HAI ASSISTANT
+        </div>
+        <i data-lucide="x" size="16" style="cursor:pointer;" onclick="toggleChat()"></i>
+    </div>
+    
+    <div class="chat-body" id="chatMsg">
+        <div style="margin-bottom:10px; color:#444;">[Session Started]</div>
+        <div style="color:#fff;">Hello Harigovind. I can now process your files, images, and voice commands. How shall we begin?</div>
+    </div>
+
+    <div class="chat-footer">
+        <div class="input-wrapper">
+            <textarea class="chat-input" placeholder="Ask anything..." rows="1"></textarea>
+            
+            <div class="action-bar">
+                <div class="media-actions">
+                    <label for="fileInput"><i data-lucide="paperclip" size="18"></i></label>
+                    <label for="cameraInput"><i data-lucide="camera" size="18"></i></label>
+                    <label for="galleryInput"><i data-lucide="image" size="18"></i></label>
+                    <input type="file" id="fileInput" onchange="handleFile('File')">
+                    <input type="file" accept="image/*" capture="environment" id="cameraInput" onchange="handleFile('Camera')">
+                    <input type="file" accept="image/*" id="galleryInput" onchange="handleFile('Gallery')">
+                </div>
+                
+                <div class="send-group">
+                    <div class="mic-btn" id="mic" onclick="toggleMic()">
+                        <i data-lucide="mic" size="18"></i>
+                    </div>
+                    <button onclick="sendMsg()" style="background:var(--accent); border:none; padding:6px 12px; border-radius:8px; cursor:pointer;">
+                        <i data-lucide="send" size="16" color="#000"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chat-trigger" onclick="toggleChat()">
+    <i data-lucide="layout-template" color="#000" size="28"></i>
+</div>
+
+<footer>
+    © 2026 HAI BRAND | ENCRYPTED BY HARIGOVIND
+</footer>
+
+<script>
+    lucide.createIcons();
+
+    function toggleChat() {
+        const win = document.getElementById('chatWin');
+        win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function toggleMic() {
+        const mic = document.getElementById('mic');
+        mic.classList.toggle('active');
+        if(mic.classList.contains('active')) {
+            console.log("Voice Command: Listening...");
+        }
+    }
+
+    function handleFile(type) {
+        const msg = document.getElementById('chatMsg');
+        msg.innerHTML += `<div style="margin-top:10px; color:var(--accent);">[System]: ${type} input detected. Processing...</div>`;
+        msg.scrollTop = msg.scrollHeight;
+    }
+
+    function sendMsg() {
+        const input = document.querySelector('.chat-input');
+        if(input.value.trim() !== "") {
+            const msg = document.getElementById('chatMsg');
+            msg.innerHTML += `<div style="margin-top:10px; color:#fff; text-align:right;">${input.value}</div>`;
+            input.value = "";
+            msg.scrollTop = msg.scrollHeight;
+        }
+    }
+</script>
+</body>
+</html>
