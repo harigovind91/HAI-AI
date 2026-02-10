@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>HAI Global Studio | Master Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #030508; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .editor-bg { background: #0a0c12; border-radius: 20px; }
+        .chat-bubble { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 10px 15px; margin-bottom: 10px; border-left: 3px solid #10b981; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <header class="p-4 glass flex justify-between items-center z-50">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-microchip text-green-500 text-2xl animate-pulse"></i>
+            <h1 class="font-black tracking-tighter text-xl">HAI <span class="text-green-500">GLOBAL</span></h1>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="HAI.preview()" class="bg-gray-800 px-4 py-1.5 rounded-lg text-[10px] font-bold hover:bg-gray-700">CHAT PREVIEW</button>
+            <button onclick="HAI.deploy()" class="bg-green-600 px-4 py-1.5 rounded-lg text-[10px] font-bold">DEPLOY LIVE</button>
+            <button onclick="HAI.publish()" class="bg-blue-600 px-4 py-1.5 rounded-lg text-[10px] font-bold">PUBLISH</button>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 grid grid-cols-12 gap-4 overflow-hidden">
+        
+        <aside class="col-span-2 glass rounded-2xl p-4 flex flex-col gap-2 overflow-y-auto">
+            <p class="text-[10px] text-gray-500 font-bold mb-2 uppercase">Core Features</p>
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-layer-group mr-2 text-blue-400"></i> Project Hub</button>
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-brain mr-2 text-purple-400"></i> AI Training</button>
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-terminal mr-2 text-green-400"></i> Console</button>
+            
+            <p class="text-[10px] text-gray-500 font-bold mt-4 mb-2 uppercase">Advanced Tools</p>
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-video mr-2"></i> Video Engine</button>
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-file-invoice-dollar mr-2"></i> Payments</button>
+            <button class="w-full text-left p-2 hover:bg-white/5 rounded text-sm"><i class="fas fa-shield-alt mr-2 text-red-400"></i> Master Key</button>
+            
+            <button onclick="window.location.href='admin_panel.html'" class="mt-auto p-2 bg-red-900/20 text-red-500 rounded text-xs text-center border border-red-900/50 hover:bg-red-900/40 font-bold">ADMIN COMMAND</button>
+        </aside>
+
+        <section class="col-span-10 flex flex-col gap-4">
+            
+            <div id="chat-preview" class="flex-1 editor-bg p-6 overflow-y-auto border border-white/5">
+                <div class="chat-bubble">
+                    <p class="text-[10px] text-green-500 font-bold uppercase">System</p>
+                    <p class="text-sm">स्वागत है वैज्ञानिक Harigovind जी। HAI Global Studio पूरी तरह सक्रिय है। आज हम क्या बनाएंगे?</p>
+                </div>
+            </div>
+
+            <div class="h-20 glass rounded-2xl flex items-center px-4 gap-3">
+                <div class="flex items-center gap-2 border-r border-white/10 pr-4">
+                    <button onclick="triggerFile()" title="Upload File" class="text-gray-400 hover:text-white"><i class="fas fa-plus"></i></button>
+                    <button onclick="triggerCamera()" title="Camera" class="text-gray-400 hover:text-white"><i class="fas fa-camera"></i></button>
+                    <button onclick="triggerGallery()" title="Gallery" class="text-gray-400 hover:text-white"><i class="fas fa-images"></i></button>
+                    <button onclick="triggerVideo()" title="Video" class="text-gray-400 hover:text-white"><i class="fas fa-video"></i></button>
+                </div>
+
+                <input type="text" id="cmd-input" placeholder="HAI से कुछ भी पूछें या कमांड दें..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm">
+
+                <div class="flex items-center gap-4">
+                    <button onclick="HAI.startVoice()" id="mic-btn" class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center hover:bg-blue-500/20">
+                        <i class="fas fa-microphone text-blue-400"></i>
+                    </button>
+                    <button onclick="HAI.execute()" class="bg-white text-black px-5 py-2 rounded-xl font-bold text-sm hover:bg-green-500 transition-colors">SEND</button>
+                </div>
+            </div>
+            
+            <input type="file" id="file-input" class="hidden">
+        </section>
+    </main>
+
+    <script>
+        // Placeholder Functions for Harigovind's UI
+        const triggerFile = () => document.getElementById('file-input').click();
+        const triggerCamera = () => alert("Camera Accessing... (Neural Link)");
+        const triggerGallery = () => alert("Opening Gallery...");
+        const triggerVideo = () => alert("Video Module Starting...");
+
+        const HAI = {
+            execute: () => {
+                const val = document.getElementById('cmd-input').value;
+                if(!val) return;
+                const chat = document.getElementById('chat-preview');
+                chat.innerHTML += `<div class='chat-bubble border-l-blue-500'><p class='text-[10px] text-blue-500 font-bold uppercase'>Harigovind</p><p class='text-sm'>${val}</p></div>`;
+                document.getElementById('cmd-input').value = "";
+                chat.scrollTop = chat.scrollHeight;
+            },
+            deploy: () => alert("Project is going LIVE globally!"),
+            publish: () => alert("Published to HAI Global Repository"),
+            startVoice: () => alert("Listening for Harigovind's Command...")
+        };
+    </script>
+</body>
+</html>
