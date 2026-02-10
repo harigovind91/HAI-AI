@@ -3,98 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HAI STUDIO PRO</title>
+    <title>HAI STUDIO | End-to-End</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        :root { --bg: #000; --accent: #00e5ff; --premium: #ffd700; --card: #111; --border: #222; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        :root { --bg: #000; --accent: #00e5ff; --panel: #0d0d0d; --border: #1a1a1a; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* Navigation */
-        nav { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-weight: 900; color: var(--accent); letter-spacing: 1.5px; }
-        .status { font-size: 10px; color: #22c55e; border: 1px solid #22c55e; padding: 2px 6px; border-radius: 4px; }
+        /* Status Header */
+        header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 10; }
+        .logo { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; }
+        .ai-status { font-size: 10px; color: var(--accent); font-family: monospace; text-transform: uppercase; }
 
-        /* Workspace with Tabs */
-        .main-container { flex: 1; overflow-y: auto; padding: 15px; }
+        /* Main Scanning Viewport */
+        #viewport { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #0a0a0a 0%, #000 100%); }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 15px var(--accent); top: -10px; animation: scan 3s linear infinite; display: none; }
+        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+
+        /* Data Overlay */
+        .overlay-data { position: absolute; top: 20px; left: 20px; font-family: monospace; font-size: 10px; color: #444; line-height: 1.6; pointer-events: none; }
+
+        /* Modules Grid (Floating) */
+        .module-dock { position: absolute; bottom: 120px; width: 100%; padding: 0 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .dock-item { background: rgba(15,15,15,0.8); border: 1px solid var(--border); padding: 12px; border-radius: 12px; text-align: center; backdrop-filter: blur(5px); }
+        .dock-item i { display: block; margin-bottom: 5px; margin: auto; }
+        .dock-item span { font-size: 10px; font-weight: 700; color: #888; }
+
+        /* Bottom Control System - SUPER SCAN */
+        .bottom-control { background: var(--panel); border-top: 1px solid var(--border); padding: 20px 20px 35px 20px; border-radius: 30px 30px 0 0; }
+        .control-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
         
-        /* Premium Features Grid (Locked) */
-        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .feature-card { 
-            background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border);
-            text-align: center; position: relative; overflow: hidden;
+        .super-scan-btn { 
+            width: 70px; height: 70px; background: #fff; border-radius: 50%; border: 5px solid #222; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2); transition: 0.3s;
         }
-        .lock-icon { position: absolute; top: 5px; right: 5px; color: var(--premium); }
-        .feature-card p { font-size: 11px; color: #888; margin-top: 5px; }
+        .super-scan-btn:active { transform: scale(0.9); background: var(--accent); }
+        
+        .icon-box { color: #555; cursor: pointer; }
+        .input-pill { flex: 1; background: #1a1a1a; border-radius: 25px; padding: 10px 15px; display: flex; align-items: center; }
+        input { background: transparent; border: none; color: #fff; font-size: 14px; width: 100%; }
 
-        /* Payment Gateway Section */
-        .payment-box {
-            background: linear-gradient(145deg, #1a1a1a, #000); border: 1px solid var(--premium);
-            border-radius: 15px; padding: 20px; text-align: center; margin-top: 20px;
-        }
-        .price { font-size: 24px; font-weight: 900; color: var(--premium); margin: 10px 0; }
-        .pay-btn { 
-            background: var(--premium); color: #000; border: none; width: 100%; 
-            padding: 12px; border-radius: 8px; font-weight: 900; cursor: pointer;
-        }
-
-        /* Fixed Bottom Input */
-        .bottom-bar { background: #000; border-top: 1px solid var(--border); padding: 12px; }
-        .input-group { background: #111; border-radius: 25px; display: flex; align-items: center; padding: 5px 15px; border: 1px solid var(--border); }
-        input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; font-size: 14px; }
-        .icon-btn { color: #666; margin: 0 5px; cursor: pointer; }
+        /* Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; padding: 40px; }
     </style>
 </head>
 <body>
 
-<nav>
-    <div class="logo">HAI STUDIO</div>
-    <div class="status">LIVE SERVER</div>
-</nav>
+<header>
+    <div class="logo">H<span>AI</span></div>
+    <div class="ai-status" id="status-text">System: Idle</div>
+</header>
 
-<div class="main-container">
-    <p style="font-size: 12px; color: #555; margin-bottom: 10px;">PREMIUM MODULES AVAILABLE:</p>
+<div id="viewport">
+    <div class="scan-line" id="scanner"></div>
+    <div class="overlay-data">
+        LAT: 25.3176° N<br>LONG: 82.9739° E<br>ALT: 80.2m<br>CORE_TEMP: 32°C
+    </div>
     
-    <div class="feature-grid">
-        <div class="feature-card" onclick="triggerPay()">
-            <i data-lucide="shield-alert" class="lock-icon" size="14"></i>
-            <i data-lucide="swords" color="#ff4444"></i>
-            <div style="font-size:12px; margin-top:5px;">War Protocol</div>
-        </div>
-        <div class="feature-card" onclick="triggerPay()">
-            <i data-lucide="lock" class="lock-icon" size="14"></i>
-            <i data-lucide="satellite" color="#00e5ff"></i>
-            <div style="font-size:12px; margin-top:5px;">Sat-Imaging</div>
-        </div>
+    <div id="display-msg" style="text-align: center; color: #333; font-weight: 800; font-size: 1.2rem;">
+        READY FOR SCAN
     </div>
 
-    <div class="payment-box">
-        <i data-lucide="crown" color="#ffd700" size="32"></i>
-        <h3>Upgrade to HAI Gold</h3>
-        <p style="font-size: 12px; color: #888; margin: 8px 0;">सभी एडवांस साइंटिफिक टूल्स अनलॉक करें</p>
-        <div class="price">₹1,999</div>
-        <button class="pay-btn" onclick="triggerPay()">PAY VIA UPI</button>
+    <div class="module-dock">
+        <div class="dock-item" onclick="triggerPremium('War Protocol')">
+            <i data-lucide="swords" color="#ff4444" size="18"></i>
+            <span>WAR</span>
+        </div>
+        <div class="dock-item" onclick="alert('Sanskar Module Active')">
+            <i data-lucide="heart" color="#ff6b6b" size="18"></i>
+            <span>SANSKAR</span>
+        </div>
+        <div class="dock-item" onclick="triggerPremium('Satellite Imaging')">
+            <i data-lucide="satellite" color="#00e5ff" size="18"></i>
+            <span>SAT</span>
+        </div>
     </div>
 </div>
 
-<div class="bottom-bar">
-    <div class="input-group">
-        <label for="cam"><i data-lucide="camera" class="icon-btn" size="20"></i></label>
-        <input type="text" placeholder="HAI से कुछ पूछें...">
-        <i data-lucide="mic" class="icon-btn" size="20"></i>
-        <i data-lucide="send" color="#00e5ff" size="20" style="margin-left:10px;"></i>
-        <input type="file" id="cam" capture="environment" accept="image/*" style="display:none">
+<div class="bottom-control">
+    <div class="control-wrapper">
+        <div class="icon-box"><i data-lucide="layers" size="24"></i></div>
+        
+        <div class="super-scan-btn" onclick="startSuperScan()">
+            <i data-lucide="aperture" color="#000" size="32"></i>
+        </div>
+
+        <div class="input-pill">
+            <input type="text" placeholder="Command...">
+            <i data-lucide="mic" size="18" color="#555"></i>
+        </div>
     </div>
+</div>
+
+<div class="modal" id="payModal">
+    <i data-lucide="lock" size="50" color="#facc15"></i>
+    <h2 id="module-name" style="margin-top:20px;">Premium Module</h2>
+    <p style="color:#666; text-align:center; margin:10px 0 30px 0;">इस हाई-एंड फीचर को अनलॉक करने के लिए प्रीमियम सब्सक्रिप्शन की आवश्यकता है।</p>
+    <button onclick="executePayment()" style="background:#facc15; border:none; padding:15px; width:100%; border-radius:12px; font-weight:900; font-size:16px;">UNLOCK NOW @ ₹1,999</button>
+    <p onclick="closeModal()" style="margin-top:20px; color:#444; font-size:12px; cursor:pointer;">वापस जाएं</p>
 </div>
 
 <script>
     lucide.createIcons();
 
-    function triggerPay() {
-        const upiId = "harigovindsingh91-2@okhdfcbank";
-        const amount = "1999";
-        const url = `upi://pay?pa=${upiId}&pn=HAI_STUDIO&am=${amount}&cu=INR&tn=Unlock_Premium`;
-        window.location.href = url;
+    function startSuperScan() {
+        const scanner = document.getElementById('scanner');
+        const status = document.getElementById('status-text');
+        const msg = document.getElementById('display-msg');
+        
+        scanner.style.display = 'block';
+        status.innerText = "System: Scanning Environment...";
+        status.style.color = "#facc15";
+        msg.innerText = "ANALYZING...";
+
+        setTimeout(() => {
+            scanner.style.display = 'none';
+            status.innerText = "System: Analysis Complete";
+            status.style.color = "#22c55e";
+            msg.innerHTML = "SCAN RESULT:<br><span style='color:#00e5ff; font-size:14px;'>Environment Secure. No threats detected.</span>";
+        }, 3000);
+    }
+
+    function triggerPremium(name) {
+        document.getElementById('module-name').innerText = name;
+        document.getElementById('payModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('payModal').style.display = 'none';
+    }
+
+    function executePayment() {
+        window.location.href = "upi://pay?pa=harigovindsingh91-2@okhdfcbank&pn=HAI_STUDIO&am=1999&cu=INR&tn=Unlock_Feature";
     }
 </script>
 
